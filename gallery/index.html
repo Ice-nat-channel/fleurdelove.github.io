@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Fleur de Love | Flower Shop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="icon" href="../icon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="../icon.ico">
+</head>
+<body>
+  <a class="skip-link" href="#gallery">Skip to content</a>
+
+<header>
+  <h1>Fleur de Love</h1>
+  <p>ดอกไม้แทนความรู้สึก ส่งต่อความรักในทุกโอกาส</p>
+</header>
+
+<nav class="site-nav" aria-label="Main navigation">
+  <div class="nav-inner">
+    <button type="button" class="nav-toggle" aria-expanded="false" aria-controls="primary-navigation" aria-label="Open navigation">
+      <span class="hamburger" aria-hidden="true"></span>
+    </button>
+    <div id="primary-navigation" class="nav-links" aria-hidden="true">
+      <a href="../home/">Home</a>
+      <a href="../price/">Price</a>
+      <a href="../gallery/">Gallery</a>
+      <a href="../contact/">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<main class="page-content">
+
+<section id="gallery" class="full-viewport">
+  <div class="card">
+    <h2>Gallery</h2>
+    <p>รวมตัวอย่างช่อดอกไม้และผลงานของร้าน 🌷 เลื่อนและคลิกเพื่อขยายดู</p>
+
+    <div class="gallery-grid" aria-label="Gallery">
+      <button class="gallery-item" data-index="0" data-src="../image/gallery/f1.jpg" aria-label="เปิดภาพ 1">
+        <img src="../image/gallery/f1.jpg" alt="ช่อดอกไม้ 1">
+      </button>
+      <button class="gallery-item" data-index="1" data-src="../image/gallery/f2.jpg" aria-label="เปิดภาพ 2">
+        <img src="../image/gallery/f2.jpg" alt="ช่อดอกไม้ 2">
+      </button>
+      <button class="gallery-item" data-index="2" data-src="../image/gallery/f3.jpg" aria-label="เปิดภาพ 3">
+        <img src="../image/gallery/f3.jpg" alt="ช่อดอกไม้ 3">
+      </button>
+      <button class="gallery-item" data-index="3" data-src="../image/gallery/f4.jpg" aria-label="เปิดภาพ 4">
+        <img src="../image/gallery/f4.jpg" alt="ช่อดอกไม้ 4">
+      </button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- Lightbox / modal -->
+<div id="lightbox" class="lightbox" aria-hidden="true" role="dialog" aria-label="Image viewer">
+  <button class="lightbox__close" aria-label="ปิด">×</button>
+  <button class="lightbox__nav lightbox__prev" aria-label="ก่อนหน้า">‹</button>
+  <div class="lightbox__content">
+    <img src="" alt="">
+  </div>
+  <button class="lightbox__nav lightbox__next" aria-label="ถัดไป">›</button>
+</div>
+
+<script>
+  (function() {
+    const items = Array.from(document.querySelectorAll('.gallery-item'));
+    const lightbox = document.getElementById('lightbox');
+    const lbImage = lightbox.querySelector('.lightbox__content img');
+    const btnClose = lightbox.querySelector('.lightbox__close');
+    const btnPrev = lightbox.querySelector('.lightbox__prev');
+    const btnNext = lightbox.querySelector('.lightbox__next');
+    let current = 0;
+    let isAnimating = false;
+
+    function open(index) {
+      if (isAnimating) return;
+      const item = items[index];
+      if (!item) return;
+      current = index;
+      lbImage.src = item.dataset.src;
+      lbImage.alt = item.querySelector('img').alt || '';
+      // ensure any previous closing state is cleared
+      lightbox.classList.remove('is-closing');
+      lightbox.setAttribute('aria-hidden', 'false');
+      // force reflow so animation restarts reliably
+      void lbImage.offsetWidth;
+      btnClose.focus();
+    }
+
+    function close() {
+      if (isAnimating) return;
+      isAnimating = true;
+      // add closing flag so CSS runs close animation
+      lightbox.classList.add('is-closing');
+      // wait for animation to finish before hiding and clearing src
+      const closeDuration = 260; // match CSS timing
+      setTimeout(() => {
+        lightbox.setAttribute('aria-hidden', 'true');
+        lightbox.classList.remove('is-closing');
+        lbImage.src = '';
+        isAnimating = false;
+      }, closeDuration);
+    }
+
+    function showNext(dir = 1) {
+      current = (current + dir + items.length) % items.length;
+      open(current);
+    }
+
+    items.forEach((btn, i) => btn.addEventListener('click', () => open(i)));
+    btnClose.addEventListener('click', close);
+    btnPrev.addEventListener('click', () => showNext(-1));
+    btnNext.addEventListener('click', () => showNext(1));
+
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) close();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (lightbox.getAttribute('aria-hidden') === 'true') return;
+      if (e.key === 'Escape') close();
+      if (e.key === 'ArrowRight') showNext(1);
+      if (e.key === 'ArrowLeft') showNext(-1);
+    });
+  })();
+</script>
+
+<footer>
+  © 2026 Fleur de Love | By N.Parin
+</footer>
+
+<script>
+  window.addEventListener('DOMContentLoaded', function() {
+    document.documentElement.classList.add('is-loaded');
+  });
+</script>
+
+<script>
+  (function(){
+    const btn = document.querySelector('.nav-toggle');
+    const nav = document.querySelector('.site-nav .nav-links');
+    if (!btn || !nav) return;
+      function openNav(){ console.log('[nav] openNav called'); nav.classList.add('visible'); nav.setAttribute('aria-hidden','false'); btn.setAttribute('aria-expanded','true'); document.documentElement.classList.add('menu-open'); const first = nav.querySelector('a'); if (first && window.matchMedia && window.matchMedia('(hover: hover)').matches) first.focus(); console.log('[nav] visible after open', nav.classList.contains('visible')); }
+    function closeNav(){ console.log('[nav] closeNav called'); nav.classList.remove('visible'); nav.setAttribute('aria-hidden','true'); btn.setAttribute('aria-expanded','false'); document.documentElement.classList.remove('menu-open'); btn.focus(); console.log('[nav] visible after close', nav.classList.contains('visible')); }
+    btn.addEventListener('click', function(e){ console.log('[nav] toggle click', e.target); e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); if (nav.classList.contains('visible')) { closeNav(); } else { openNav(); } }, true);
+    document.addEventListener('click', function(e){ console.log('[nav] document click', e.target); if (!nav.contains(e.target) && !btn.contains(e.target)) closeNav(); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeNav(); });
+    function checkWidth(){ if (window.matchMedia('(min-width:700px)').matches){ nav.classList.remove('visible'); nav.setAttribute('aria-hidden','false'); btn.setAttribute('aria-expanded','false'); document.documentElement.classList.remove('menu-open'); } else { nav.setAttribute('aria-hidden','true'); } }
+    window.addEventListener('resize', checkWidth);
+    checkWidth();
+  })();
+</script>
+<!-- Click sound: plays a short click on interactive elements -->
+<script>
+  (function(){
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const src = '/assets/click.mp3';
+    const poolSize = 6;
+    const pool = [];
+    for (let i=0;i<poolSize;i++){ const a = new Audio(src); a.preload='auto'; a.volume=0.45; pool.push(a); }
+    let idx = 0;
+    function play(){ try{ const a = pool[idx]; a.currentTime = 0; a.play(); idx = (idx+1)%poolSize; }catch(e){console.warn('click audio failed', e)} }
+    const selector = 'a, button, .btn, [role="button"], input[type="button"], input[type="submit"], .gallery-item';
+
+    document.addEventListener('click', function(e){
+      if (e.button !== 0) return;
+      if (e.defaultPrevented) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const el = e.target.closest(selector);
+      if (!el) return;
+      if (el.classList && el.classList.contains('nav-toggle')) return; 
+
+      if (el.tagName === 'A' && el.href) {
+        try {
+          const url = new URL(el.href, location.href);
+          const isSameOrigin = url.origin === location.origin;
+          const isHashOnly = url.pathname === location.pathname && url.hash;
+          const isExternal = el.target === '_blank' || el.hasAttribute('download');
+          if (isSameOrigin && !isHashOnly && !isExternal) {
+            e.preventDefault();
+            play();
+            setTimeout(() => { location.href = url.href; }, 160);
+            return;
+          }
+        } catch(e) {}
+      }
+
+      play();
+    }, true);
+
+    document.addEventListener('keydown', function(e){
+      if (e.defaultPrevented) return;
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const el = document.activeElement;
+      if (!el || !el.matches(selector)) return;
+
+      if (el.tagName === 'A' && el.href) {
+        try {
+          const url = new URL(el.href, location.href);
+          const isSameOrigin = url.origin === location.origin;
+          const isHashOnly = url.pathname === location.pathname && url.hash;
+          const isExternal = el.target === '_blank' || el.hasAttribute('download');
+          if (isSameOrigin && !isHashOnly && !isExternal) {
+            e.preventDefault();
+            play();
+            setTimeout(() => { location.href = url.href; }, 160);
+            return;
+          }
+        } catch(e) {}
+      }
+
+      play();
+    }, true);
+
+  })();
+</script>
+
+</body>
+</html>
