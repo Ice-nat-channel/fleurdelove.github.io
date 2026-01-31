@@ -105,6 +105,7 @@ header p {
     cursor: pointer;
     color: #5a3b3b;
     z-index: 1400; /* ensure button sits above overlay */
+    transition: background 220ms ease, transform 220ms ease, color 220ms ease;
 }
 .hamburger {
     width: 22px;
@@ -113,6 +114,7 @@ header p {
     display: block;
     position: relative;
     border-radius: 2px;
+    transition: background 220ms ease, transform 220ms ease;
 }
 .hamburger::before,
 .hamburger::after {
@@ -127,6 +129,24 @@ header p {
 .hamburger::before { top: -7px; }
 .hamburger::after { top: 7px; }
 .nav-toggle:focus { outline: 3px solid rgba(201,122,138,0.28); outline-offset: 2px; }
+
+/* Hover visual (desktop) */
+@media (hover: hover) {
+    .nav-toggle:hover {
+        background: linear-gradient(90deg, rgba(232,156,171,0.95), rgba(201,122,138,0.95));
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+    .nav-toggle:hover .hamburger { background: currentColor; }
+}
+
+/* Click animation: temporary visual for taps/clicks */
+.nav-toggle.clicked {
+    background: linear-gradient(90deg, rgba(232,156,171,0.95), rgba(201,122,138,0.95));
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+.nav-toggle.clicked .hamburger { background: currentColor; }
 
 /* Navigation links: collapsed on small screens -> full-screen overlay when opened */
 .site-nav .nav-links {
