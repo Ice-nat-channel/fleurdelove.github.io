@@ -102,6 +102,12 @@
 
 
 <script>
+  window.addEventListener('DOMContentLoaded', function() {
+    document.documentElement.classList.add('is-loaded');
+  });
+</script>
+
+<script>
   (function(){
     const btn = document.querySelector('.nav-toggle');
     const nav = document.querySelector('.site-nav .nav-links');
@@ -117,7 +123,7 @@
   })();
 </script>
 
-<!-- Click sound: plays a short click on interactive elements (path is site-root) -->
+<!-- Click sound: plays a short click on interactive elements -->
 <script>
   (function(){
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
