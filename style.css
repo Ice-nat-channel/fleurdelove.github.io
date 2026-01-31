@@ -148,6 +148,15 @@ header p {
 }
 .nav-toggle.clicked .hamburger { background: currentColor; }
 
+/* Toggled (menu open) state */
+.nav-toggle.toggled {
+    background: #e0b3e0;
+    color: #fff;
+    box-shadow: 0 4px 16px 0 #0002;
+    border-color: #e0b3e0;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
 /* Navigation links: collapsed on small screens -> full-screen overlay when opened */
 .site-nav .nav-links {
     display: flex;
