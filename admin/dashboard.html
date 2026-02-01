@@ -314,6 +314,27 @@
       border: 1px solid #f5c6cb;
     }
 
+    /* Sync status UI */
+    .sync-status {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 13px;
+      color: #666;
+    }
+    .sync-badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 12px;
+      display: inline-block;
+    }
+    .sync-idle { background: #f0f0f0; color: #666; }
+    .sync-syncing { background: #fff3cd; color: #856404; }
+    .sync-ok { background: #d4edda; color: #155724; }
+    .sync-error { background: #f8d7da; color: #721c24; }
+    .sync-small { font-size: 11px; color: #999; }
+
     @media (max-width: 768px) {
       .sidebar {
         width: 100%;
@@ -365,6 +386,12 @@
         <h1>Dashboard</h1>
         <div class="user-info">
           <p>Welcome, <strong id="usernameDisplay">Admin</strong></p>
+        </div>
+        <div class="sync-status" id="syncStatus" aria-live="polite">
+          <span class="sync-badge sync-idle" id="syncBadge">Idle</span>
+          <span class="sync-small" id="syncMessage">Not connected</span>
+          <button class="btn-secondary" id="syncRetryBtn" style="margin-left:8px; display:none;" onclick="triggerManualSync()">Retry</button>
+          <button class="btn-secondary" id="syncSignInBtn" style="margin-left:8px; display:none;" onclick="window.location.href='./login.html'">Sign in</button>
         </div>
       </div>
 
@@ -491,12 +518,17 @@
           <hr style="margin:18px 0;border:none;border-top:1px solid #f0e6e9;">
           <h3 style="margin-top:8px;color:#5a3b3b;">Admin Accounts</h3>
           <div id="adminAccountsBox" style="margin-top:10px;">
+            <div class="alert" id="adminAlert"></div>
             <div id="adminUsersList" style="background:#fff;padding:12px;border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.04); max-height:180px; overflow:auto; margin-bottom:10px;"></div>
             <div style="display:flex; gap:8px;">
               <input id="adminNewUser" placeholder="Username" style="flex:1; padding:8px; border:2px solid #e0c1d1; border-radius:6px;">
               <input id="adminNewPass" placeholder="Password" type="password" style="flex:1; padding:8px; border:2px solid #e0c1d1; border-radius:6px;">
               <button class="btn-primary" id="addAdminBtn" style="flex:0 0 120px;">Add</button>
             </div>
+          </div>
+          <div style="margin-top:12px;">
+            <label style="display:block; margin-bottom:6px; color:#5a3b3b; font-weight:600;">Apply changes as</label>
+            <select id="actAsSelect" style="padding:8px; border:2px solid #e0c1d1; border-radius:6px; width:100%; max-width:320px;"></select>
           </div>
             <div style="margin-top:12px; display:flex; gap:8px;">
               <button class="btn-secondary" onclick="exportSiteData()">Export Data</button>
@@ -642,9 +674,16 @@
       window.location.href = './login.html';
     }
 
-    // Display username
+    // Display username and acting-as indicator
     const username = localStorage.getItem('adminUsername');
     document.getElementById('usernameDisplay').textContent = username || 'Admin';
+    function updateActAsDisplay(){
+      try{
+        const sel = document.getElementById('actAsSelect');
+        const act = localStorage.getItem('fd_actAs') || localStorage.getItem('adminUsername') || '';
+        if (sel) sel.value = act;
+      }catch(e){}
+    }
 
     let editingProductIndex = null;
     let editingGalleryIndex = null;
@@ -660,6 +699,7 @@
       updateStats();
       // render admin users in settings (account management)
       if (typeof renderAdminUsers === 'function') renderAdminUsers();
+      try{ if (typeof updateActAsDisplay === 'function') updateActAsDisplay(); }catch(e){}
       // load store settings (including quantity unit)
       if (typeof loadStoreSettings === 'function') loadStoreSettings();
     }
@@ -920,6 +960,7 @@
       }
 
       localStorage.setItem('products', JSON.stringify(products));
+      try{ if (typeof pushToFirebase === 'function') pushToFirebase(); }catch(e){}
       closeProductModal();
       loadProducts();
       updateStats();
@@ -976,6 +1017,7 @@
         const products = JSON.parse(localStorage.getItem('products')) || [];
         products.splice(index, 1);
         localStorage.setItem('products', JSON.stringify(products));
+        try{ if (typeof pushToFirebase === 'function') pushToFirebase(); }catch(e){}
         loadProducts();
         updateStats();
       }
@@ -1079,8 +1121,8 @@
           } else {
             gallery.push(payload);
           }
-
           localStorage.setItem('gallery', JSON.stringify(gallery));
+          try{ if (typeof pushToFirebase === 'function') pushToFirebase(); }catch(e){}
           closeGalleryModal();
           loadGalleryImages();
           updateStats();
@@ -1108,6 +1150,7 @@
         }
 
         localStorage.setItem('gallery', JSON.stringify(gallery));
+        try{ if (typeof pushToFirebase === 'function') pushToFirebase(); }catch(e){}
         closeGalleryModal();
         loadGalleryImages();
         updateStats();
@@ -1197,6 +1240,7 @@
         const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
         gallery.splice(index, 1);
         localStorage.setItem('gallery', JSON.stringify(gallery));
+        try{ if (typeof pushToFirebase === 'function') pushToFirebase(); }catch(e){}
         loadGalleryImages();
         updateStats();
       }
@@ -1271,6 +1315,7 @@
         const inquiries = JSON.parse(localStorage.getItem('inquiries')) || [];
         inquiries.splice(index, 1);
         localStorage.setItem('inquiries', JSON.stringify(inquiries));
+        try{ if (typeof pushToFirebase === 'function') pushToFirebase(); }catch(e){}
         loadInquiries();
         updateStats();
       }
@@ -1286,6 +1331,7 @@
         updatedAt: new Date().toISOString()
       };
       localStorage.setItem('storeSettings', JSON.stringify(settings));
+      try{ if (typeof pushToFirebase === 'function') pushToFirebase(); }catch(e){}
       alert('Settings saved successfully!');
     }
 
@@ -1350,11 +1396,41 @@
       reader.readAsText(file);
       // reset the input so same file can be selected again if needed
       e.target.value = '';
+      // push imported data to remote (if enabled)
+      try { if (typeof pushToFirebase === 'function') pushToFirebase(); } catch(e){}
+      try { if (typeof pushAdminToFirebase === 'function') pushAdminToFirebase(); } catch(e){}
     }
 
     // Admin account management (protected in dashboard)
     function getAdminUsers() { try { return JSON.parse(localStorage.getItem('adminUsers')) || []; } catch(e){ return []; } }
-    function saveAdminUsers(users) { localStorage.setItem('adminUsers', JSON.stringify(users)); }
+    function saveAdminUsers(users) {
+      localStorage.setItem('adminUsers', JSON.stringify(users));
+      const adminAlertId = 'adminAlert';
+        if (typeof pushAdminToFirebase === 'function') {
+          try {
+            const p = pushAdminToFirebase();
+            if (p && typeof p.then === 'function') {
+              p.then(() => {
+                try{ showAlert(adminAlertId, 'Admin accounts synced to server', 'success'); }catch(e){}
+              }).catch((err) => {
+                console.warn('pushAdminToFirebase failed for adminUsers', err);
+                if (err && err.code === 'permission-denied') {
+                  try{ showAlert(adminAlertId, 'Saved locally. Sign in as Firebase admin to sync to other devices.', 'error'); }catch(e){}
+                  try{ const s = document.getElementById('syncSignInBtn'); if (s) s.style.display = 'inline-block'; }catch(e){}
+                } else {
+                  try{ showAlert(adminAlertId, 'Saved locally. Sync failed: ' + (err && err.message ? err.message : ''), 'error'); }catch(e){}
+                }
+              });
+            } else {
+              try{ showAlert(adminAlertId, 'Saved locally. Sync request sent.', 'success'); }catch(e){}
+            }
+          } catch (e) {
+            try{ showAlert(adminAlertId, 'Saved locally. Sync failed to start.', 'error'); }catch(e){}
+          }
+      } else {
+        try{ showAlert(adminAlertId, 'Saved locally (remote sync disabled).', 'success'); }catch(e){}
+      }
+    }
 
     // Ensure default admin exists
     (function(){ const u = getAdminUsers(); if (!u || u.length === 0) saveAdminUsers([{ username: 'admin', password: 'admin123' }]); })();
@@ -1365,21 +1441,22 @@
       const users = getAdminUsers();
       list.innerHTML = '';
       const currentUser = localStorage.getItem('adminUsername') || '';
+      const isSignedIn = !!localStorage.getItem('adminLoggedIn');
       users.forEach((u, idx) => {
         const row = document.createElement('div');
         row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:8px 6px; border-bottom:1px solid #f5eef2;';
         const left = document.createElement('div'); left.textContent = u.username; left.style.fontWeight = '700'; left.style.color = '#5a3b3b';
         const right = document.createElement('div');
         const rm = document.createElement('button'); rm.className = 'btn-danger'; rm.textContent = 'Remove';
-        // Disable remove when this is the last remaining admin or when current user is not 'admin'
-        if (users.length <= 1 || currentUser !== 'admin') {
+        // Disable remove when this is the last remaining admin or when nobody is signed in
+        if (users.length <= 1 || !isSignedIn) {
           rm.disabled = true;
           rm.style.opacity = '0.55';
-          rm.title = currentUser !== 'admin' ? 'Only signed-in admin can remove accounts' : 'Cannot remove the last admin';
+          rm.title = !isSignedIn ? 'Sign in as an admin to remove accounts' : 'Cannot remove the last admin';
         }
         rm.onclick = function(){
           const signed = localStorage.getItem('adminUsername') || '';
-          if (signed !== 'admin') { alert('Only the signed-in admin can remove accounts'); return; }
+          if (!signed) { alert('Sign in as an admin to remove accounts'); return; }
           const current = getAdminUsers();
           if (current.length <= 1) { alert('Cannot remove the last admin'); return; }
           if (!confirm('Remove account ' + u.username + '?')) return;
@@ -1398,7 +1475,7 @@
       if (addBtn && !addBtn.dataset.bound) {
         addBtn.addEventListener('click', function(){
           const currentUser = localStorage.getItem('adminUsername') || '';
-          if (currentUser !== 'admin') { alert('Only the signed-in admin can add accounts'); return; }
+          if (!isSignedIn) { alert('Sign in as an admin to add accounts'); return; }
           const nameInput = document.getElementById('adminNewUser');
           const name = nameInput ? nameInput.value.trim() : '';
           const pass = document.getElementById('adminNewPass').value;
@@ -1418,9 +1495,236 @@
       // (reuse previously read `currentUser`)
       if (nameInput) {
         nameInput.value = '';
-        nameInput.disabled = currentUser !== 'admin';
+        nameInput.disabled = !isSignedIn;
       }
-      if (addBtn) addBtn.disabled = currentUser !== 'admin';
+      if (addBtn) addBtn.disabled = !isSignedIn;
+      // populate 'Act as' select with available admin usernames
+      try{
+        const actSel = document.getElementById('actAsSelect');
+        if (actSel) {
+          const usersList = getAdminUsers();
+          actSel.innerHTML = '';
+          usersList.forEach(u => {
+            const opt = document.createElement('option');
+            opt.value = u.username;
+            opt.textContent = u.username;
+            actSel.appendChild(opt);
+          });
+          // default to saved actAs or current user
+          const saved = localStorage.getItem('fd_actAs') || localStorage.getItem('adminUsername') || '';
+          if (saved) actSel.value = saved;
+          actSel.onchange = function(){ localStorage.setItem('fd_actAs', actSel.value); };
+        }
+      }catch(e){}
+    }
+
+    // ---- Optional Firebase sync (Firestore) ----
+    // To enable: create a Firebase project and paste the config below as `window.FIREBASE_CONFIG`.
+    // Example (replace values):
+    // window.FIREBASE_CONFIG = {
+    //   apiKey: "...",
+    //   authDomain: "your-project.firebaseapp.com",
+    //   projectId: "your-project-id",
+    //   storageBucket: "your-project.appspot.com",
+    //   messagingSenderId: "...",
+    //   appId: "..."
+    // };
+
+    (function setupFirebaseHooks(){
+      // generate a client id to reduce write loops
+      if (!localStorage.getItem('fd_clientId')) localStorage.setItem('fd_clientId', Math.random().toString(36).slice(2));
+    })();
+
+    // Initialize firebase sync if config present (uses compat SDK)
+    function initFirebaseSync(){
+      try{
+        if (!window.FIREBASE_CONFIG || !window.FIREBASE_CONFIG.apiKey) return;
+        if (!window.firebase) return; // SDK not loaded
+        if (window._fd_firebase_initialized) return;
+        window._fd_firebase_initialized = true;
+        firebase.initializeApp(window.FIREBASE_CONFIG);
+        const db = firebase.firestore();
+        const docRef = db.collection('site').doc('shared');
+        const adminDocRef = db.collection('site').doc('adminUsers');
+
+        // listen for remote updates and update sync UI
+        function setSyncStatus(state, info) {
+          try {
+            const badge = document.getElementById('syncBadge');
+            const msg = document.getElementById('syncMessage');
+            const signInBtn = document.getElementById('syncSignInBtn');
+            const retryBtn = document.getElementById('syncRetryBtn');
+            if (!badge || !msg) return;
+            badge.className = 'sync-badge';
+            retryBtn.style.display = 'none';
+            if (signInBtn) signInBtn.style.display = 'none';
+            if (state === 'idle') { badge.classList.add('sync-idle'); badge.textContent = 'Idle'; msg.textContent = info || 'Not connected'; }
+            else if (state === 'syncing') { badge.classList.add('sync-syncing'); badge.textContent = 'Syncing'; msg.textContent = info || 'Uploading changes...'; }
+            else if (state === 'ok') { badge.classList.add('sync-ok'); badge.textContent = 'Synced'; msg.textContent = info || ('Last: ' + new Date().toLocaleTimeString()); }
+            else if (state === 'error') { badge.classList.add('sync-error'); badge.textContent = 'Error'; msg.textContent = info || 'Sync failed'; retryBtn.style.display = 'inline-block'; }
+          } catch (e) { /* ignore UI errors */ }
+        }
+
+        // Check whether current Firebase user has admin claim and show guidance if not
+        function checkAdminClaim() {
+          try {
+            if (!window.firebase || !firebase.auth) return;
+            const signInBtn = document.getElementById('syncSignInBtn');
+            const msg = document.getElementById('syncMessage');
+            const badge = document.getElementById('syncBadge');
+            const user = firebase.auth().currentUser;
+            if (!user) {
+              setSyncStatus('idle', 'Not signed in');
+              if (signInBtn) signInBtn.style.display = 'inline-block';
+              return;
+            }
+            user.getIdTokenResult().then((idTokenResult) => {
+              const claims = idTokenResult && idTokenResult.claims;
+              if (claims && claims.admin) {
+                setSyncStatus('ok', 'Signed in as admin');
+              } else {
+                setSyncStatus('error', 'Not authorized — admin claim missing');
+                if (signInBtn) signInBtn.style.display = 'inline-block';
+              }
+            }).catch((err) => {
+              console.warn('getIdTokenResult failed', err);
+              setSyncStatus('error', 'Auth token error');
+              if (signInBtn) signInBtn.style.display = 'inline-block';
+            });
+          } catch (e) {}
+        }
+
+        window._fd_sync_failures = window._fd_sync_failures || 0;
+        window._fd_nextRetryMs = window._fd_nextRetryMs || 0;
+
+        docRef.onSnapshot((snap) => {
+          if (!snap.exists) return;
+          const data = snap.data();
+          const clientId = localStorage.getItem('fd_clientId');
+          // Apply remote data into localStorage
+          try{
+            if (data.products) localStorage.setItem('products', JSON.stringify(data.products));
+            if (data.gallery) localStorage.setItem('gallery', JSON.stringify(data.gallery));
+            if (data.orders) localStorage.setItem('orders', JSON.stringify(data.orders));
+            if (data.inquiries) localStorage.setItem('inquiries', JSON.stringify(data.inquiries));
+            if (data.storeSettings) localStorage.setItem('storeSettings', JSON.stringify(data.storeSettings));
+          }catch(e){}
+          // refresh UI
+          try{ loadData(); }catch(e){}
+          // show remote update info
+          if (data && data.updatedAt) setSyncStatus('ok', 'Remote: ' + new Date(data.updatedAt).toLocaleString());
+          else setSyncStatus('ok', 'Remote update');
+        }, (err)=>{
+          console.warn('Firestore sync error', err);
+          // show permission-specific guidance
+          const msg = (err && err.message) ? err.message : 'Sync error';
+          setSyncStatus('error', msg.indexOf('permission') !== -1 ? 'Permission denied — sign in as admin' : msg);
+          // show sign-in button when permission denied
+          try { if (err && err.code && err.code === 'permission-denied') { const s = document.getElementById('syncSignInBtn'); if (s) s.style.display='inline-block'; } } catch(e){}
+        });
+
+        // listen specifically for adminUsers updates on a separate document
+        try{
+          adminDocRef.onSnapshot((snap) => {
+            if (!snap.exists) return;
+            const data = snap.data() || {};
+            try{
+              if (data.adminUsers) {
+                localStorage.setItem('adminUsers', JSON.stringify(data.adminUsers));
+                try{ renderAdminUsers(); }catch(e){}
+              }
+            }catch(e){}
+            // optionally surface admin-specific update info
+            if (data && data.updatedAt) {
+              try { const msg = document.getElementById('syncMessage'); if (msg) msg.textContent = 'Admins: ' + new Date(data.updatedAt).toLocaleString(); }catch(e){}
+            }
+          }, (err)=>{
+            console.warn('Firestore adminUsers sync error', err);
+          });
+        }catch(e){}
+
+        // expose push function with UI updates and simple retry/backoff
+        window.pushToFirebase = function(forceImmediate){
+          setSyncStatus('syncing', 'Uploading...');
+          try{
+            const payload = {
+              products: JSON.parse(localStorage.getItem('products') || '[]'),
+              gallery: JSON.parse(localStorage.getItem('gallery') || '[]'),
+              orders: JSON.parse(localStorage.getItem('orders') || '[]'),
+              inquiries: JSON.parse(localStorage.getItem('inquiries') || '[]'),
+              storeSettings: JSON.parse(localStorage.getItem('storeSettings') || '{}'),
+              updatedAt: new Date().toISOString(),
+              updatedBy: localStorage.getItem('fd_clientId') || null,
+              updatedByUser: localStorage.getItem('fd_actAs') || localStorage.getItem('adminUsername') || null
+            };
+            return docRef.set(payload, { merge: true }).then(() => {
+              window._fd_sync_failures = 0;
+              window._fd_nextRetryMs = 0;
+              setSyncStatus('ok', 'Last: ' + new Date().toLocaleTimeString());
+            }).catch((err) => {
+              window._fd_sync_failures = (window._fd_sync_failures || 0) + 1;
+              const base = 2000;
+              const next = Math.min(60000, base * Math.pow(2, window._fd_sync_failures));
+              window._fd_nextRetryMs = next;
+              // If permission denied, show sign-in guidance
+              const msgText = (err && err.code === 'permission-denied') ? 'Permission denied — sign in as admin' : ((err && err.message) ? err.message : ('Push failed — retry in ' + Math.round(next/1000) + 's'));
+              setSyncStatus('error', msgText);
+              try{ if (err && err.code === 'permission-denied') { const s = document.getElementById('syncSignInBtn'); if (s) s.style.display='inline-block'; } }catch(e){}
+              console.warn('pushToFirebase error', err);
+              if (forceImmediate !== true) {
+                setTimeout(function(){ try{ if (typeof pushToFirebase === 'function') pushToFirebase(); }catch(e){} }, next);
+              }
+              return Promise.reject(err);
+            });
+          }catch(e){ setSyncStatus('error', e.message || 'Push failed'); return Promise.reject(e); }
+        };
+
+        // push adminUsers to a separate document (returns a Promise)
+        window.pushAdminToFirebase = function(forceImmediate){
+          try{
+            const clientId = localStorage.getItem('fd_clientId') || null;
+            const payload = {
+              adminUsers: JSON.parse(localStorage.getItem('adminUsers') || '[]'),
+              updatedAt: new Date().toISOString(),
+              updatedBy: clientId,
+              updatedByUser: localStorage.getItem('fd_actAs') || localStorage.getItem('adminUsername') || null
+            };
+            window._fd_admin_sync_failures = window._fd_admin_sync_failures || 0;
+            window._fd_admin_nextRetryMs = window._fd_admin_nextRetryMs || 0;
+            return adminDocRef.set(payload, { merge: true }).then(() => {
+              window._fd_admin_sync_failures = 0;
+              window._fd_admin_nextRetryMs = 0;
+              return Promise.resolve();
+            }).catch((err) => {
+              window._fd_admin_sync_failures = (window._fd_admin_sync_failures || 0) + 1;
+              const base = 2000;
+              const next = Math.min(60000, base * Math.pow(2, window._fd_admin_sync_failures));
+              window._fd_admin_nextRetryMs = next;
+              console.warn('pushAdminToFirebase error', err);
+              if (forceImmediate !== true) {
+                setTimeout(function(){ try{ if (typeof pushAdminToFirebase === 'function') pushAdminToFirebase(); }catch(e){} }, next);
+              }
+              return Promise.reject(err);
+            });
+          }catch(e){ return Promise.reject(e); }
+        };
+
+        // manual retry helper wired to the UI button
+        window.triggerManualSync = function(){
+          // force immediate retry and reset failure counter
+          window._fd_sync_failures = 0;
+          window._fd_nextRetryMs = 0;
+            try{ if (typeof pushToFirebase === 'function') pushToFirebase(true).catch(()=>{}); }catch(e){}
+        };
+        // when auth state changes, re-check claims
+        try{
+          if (firebase && firebase.auth) {
+            firebase.auth().onAuthStateChanged(function(user){
+              setTimeout(checkAdminClaim, 250);
+            });
+          }
+        }catch(e){}
+      }catch(e){ console.warn('initFirebaseSync failed', e); }
     }
 
     // Helper functions
@@ -1453,8 +1757,14 @@
     });
 
     function logout() {
+      try {
+        if (window.firebase && firebase.auth) {
+          firebase.auth().signOut().catch(function(){});
+        }
+      } catch (e) {}
       localStorage.removeItem('adminLoggedIn');
       localStorage.removeItem('adminUsername');
+      try{ localStorage.removeItem('fd_actAs'); }catch(e){}
       window.location.href = './login.html';
     }
 
@@ -1469,10 +1779,42 @@
       if (event.target == galleryModal) {
         galleryModal.classList.remove('show');
       }
-    }
+    };
 
     // Initialize
-    loadData();
+    // Optional: attempt to load `admin/firebase-config.js` (if present), then load SDKs (app, auth, firestore)
+    (function tryLoadFirebaseConfigThenInit(){
+      function startMaybeLoad(){
+        if (!window.FIREBASE_CONFIG || !window.FIREBASE_CONFIG.apiKey) { loadData(); return; }
+        // show connecting state while SDKs load
+        try{
+          const sb = document.getElementById('syncBadge');
+          const sm = document.getElementById('syncMessage');
+          if (sb && sm) { sb.className='sync-badge sync-syncing'; sb.textContent='Connecting'; sm.textContent='Initializing Firebase...'; }
+        }catch(e){}
+
+        // If firebase isn't loaded, load app + auth + firestore in sequence
+        function loadScript(src){ return new Promise(function(res, rej){ var s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+
+        (async function(){
+          try{
+            if (typeof firebase === 'undefined') await loadScript('https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js');
+            if (typeof firebase.auth === 'undefined') await loadScript('https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js');
+            if (typeof firebase.firestore === 'undefined') await loadScript('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js');
+            try{ initFirebaseSync(); }catch(e){ console.warn(e); }
+          }catch(e){ console.warn('Failed loading Firebase SDKs', e); }
+          finally{ loadData(); }
+        })();
+      }
+
+      // Try to load an optional config file placed next to the admin page.
+      var cfgScript = document.createElement('script');
+      cfgScript.src = './firebase-config.js';
+      cfgScript.async = false;
+      cfgScript.onload = function(){ startMaybeLoad(); };
+      cfgScript.onerror = function(){ startMaybeLoad(); };
+      document.head.appendChild(cfgScript);
+    })();
   </script>
 </body>
 </html>
