@@ -245,6 +245,33 @@ header p {
     .gallery-item img { height: auto; display: block; }
     /* Reduce horizontal gap in price rows on small screens */
     .price-list li { gap: 12px; }
+
+    /* Make cards full-width and compact on small screens */
+    .card {
+        width: calc(100% - 24px);
+        margin: 0 12px 16px;
+        padding: 14px 14px;
+        border-radius: 12px;
+    }
+
+    /* Stack price rows vertically for better readability on phones */
+    .price-list li {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 10px 12px;
+    }
+    .price-qty, .price-amt {
+        flex: none;
+        width: 100%;
+        text-align: left;
+        font-size: 16px;
+    }
+    .price-amt { color: #c97a8a; margin-top: 2px; }
+
+    /* Make image boxes more compact on phone */
+    .img-box { padding: 16px; }
 }
   
 
