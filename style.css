@@ -234,9 +234,10 @@ header p {
     .full-viewport { min-height: auto; padding: 20px 12px; align-items: flex-start; }
     /* Ensure price section stacks vertically and cards are compact */
     /* Strong overrides to guarantee single-column stacking on small devices */
-    #price, #price.full-viewport { display: flex !important; flex-direction: column !important; gap: 14px !important; padding: 8px 0 24px !important; }
+    #price, #price.full-viewport { display: flex !important; flex-direction: column !important; gap: 14px !important; padding: 8px 16px 24px !important; }
     #price { align-items: stretch !important; }
-    #price > .card { display: block !important; width: 100% !important; max-width: none !important; margin: 0 0 12px !important; box-sizing: border-box !important; }
+    /* keep some space at the edges on phones so cards aren't flush to screen */
+    #price > .card { display: block !important; width: calc(100% - 16px) !important; max-width: none !important; margin: 0 auto 12px !important; box-sizing: border-box !important; }
     #price .card { margin-bottom: 14px; padding: 16px; border-radius: 12px; }
     .price-list { gap: 8px; }
     .price-list li { padding: 10px 12px; font-size: 16px; }
