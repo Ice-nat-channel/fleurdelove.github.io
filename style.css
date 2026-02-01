@@ -233,7 +233,7 @@ header p {
     /* Make full-viewport sections behave normally on phones so content stacks vertically */
     .full-viewport { min-height: auto; padding: 20px 12px; align-items: flex-start; }
     /* Ensure price section stacks vertically and cards are compact */
-    #price { display: block; padding: 8px 0 24px; }
+    #price, #price.full-viewport { display: block; padding: 8px 0 24px; grid-template-columns: none; }
     #price .card { margin-bottom: 14px; padding: 16px; border-radius: 12px; }
     .price-list { gap: 8px; }
     .price-list li { padding: 10px 12px; font-size: 16px; }
@@ -391,7 +391,8 @@ section {
     box-shadow: 0 6px 16px rgba(0,0,0,0.04);
     color: #5a3b3b;
     font-weight: 600;
-    gap: 120px;
+    gap: 12px;
+    justify-content: space-between;
 }
 .price-list li strong { font-weight: 700; }
 .price-qty { font-weight: 700; flex: 1; text-align: left; }
