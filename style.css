@@ -234,11 +234,13 @@ header p {
     .full-viewport { min-height: auto; padding: 20px 12px; align-items: flex-start; }
     /* Ensure price section stacks vertically and cards are compact */
     /* Strong overrides to guarantee single-column stacking on small devices */
-    #price, #price.full-viewport { display: flex !important; flex-direction: column !important; gap: 14px !important; padding: 8px 16px 24px !important; }
+    /* Ensure price container has equal left/right padding and cards fill the inner area */
+    #price, #price.full-viewport { display: flex !important; flex-direction: column !important; gap: 14px !important; padding: 8px 18px 24px !important; box-sizing: border-box; }
     #price { align-items: stretch !important; }
-    /* keep some space at the edges on phones so cards aren't flush to screen */
-    #price > .card { display: block !important; width: calc(100% - 16px) !important; max-width: none !important; margin: 0 auto 12px !important; box-sizing: border-box !important; }
-    #price .card { margin-bottom: 14px; padding: 16px; border-radius: 12px; }
+    /* Cards take full width of the padded container (use border-box to respect inner padding) */
+    #price > .card { display: block !important; width: 100% !important; max-width: none !important; margin: 0 0 12px !important; box-sizing: border-box !important; }
+    /* card inner spacing */
+    #price > .card .card, #price > .card { padding: 16px !important; border-radius: 12px !important; }
     .price-list { gap: 8px; }
     .price-list li { padding: 10px 12px; font-size: 16px; }
     .card h2 { margin-bottom: 8px; font-size: 20px; }
@@ -252,10 +254,11 @@ header p {
 
     /* Make cards full-width and compact on small screens */
     .card {
-        width: calc(100% - 24px);
-        margin: 0 12px 16px;
+        width: 100%;
+        margin: 0 0 16px;
         padding: 14px 14px;
         border-radius: 12px;
+        box-sizing: border-box;
     }
 
     /* Stack price rows vertically for better readability on phones */
