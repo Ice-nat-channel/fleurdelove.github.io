@@ -483,6 +483,10 @@
             <label>Store Description</label>
             <textarea id="storeDescription" placeholder="Enter store description">ร้านดอกไม้โทนหวาน หรู โรแมนติก</textarea>
           </div>
+          <div class="form-group">
+            <label>Quantity Unit</label>
+            <input type="text" id="quantityUnit" placeholder="e.g., ชิ้น, ช่อ, ชุด" value="ชิ้น">
+          </div>
           <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
           <hr style="margin:18px 0;border:none;border-top:1px solid #f0e6e9;">
           <h3 style="margin-top:8px;color:#5a3b3b;">Admin Accounts</h3>
@@ -536,6 +540,10 @@
         <div class="form-group">
           <label for="productSinglePrice">Single Price (฿) — optional if using price tiers</label>
           <input type="number" id="productSinglePrice" placeholder="e.g., 59" step="1" min="0" style="width:100%; padding:8px; border:2px solid #e0c1d1; border-radius:6px;">
+        </div>
+        <div class="form-group">
+          <label for="productQuantityUnit">Quantity Unit (per product, optional)</label>
+          <input type="text" id="productQuantityUnit" placeholder="e.g., ชิ้น, ช่อ, ชุด" style="width:100%; padding:8px; border:2px solid #e0c1d1; border-radius:6px;">
         </div>
 
         <div id="pricesTierContainer">
@@ -652,6 +660,8 @@
       updateStats();
       // render admin users in settings (account management)
       if (typeof renderAdminUsers === 'function') renderAdminUsers();
+      // load store settings (including quantity unit)
+      if (typeof loadStoreSettings === 'function') loadStoreSettings();
     }
 
     function updateStats() {
@@ -710,10 +720,11 @@
       document.getElementById('productUnlimited').checked = false;
       document.getElementById('productStock').disabled = false;
       document.getElementById('formAlert').classList.remove('show');
+      const qtyLabel = getQuantityUnit();
       document.getElementById('pricesTierContainer').innerHTML = `
         <div class="price-tier-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;">
           <div style="flex: 1;">
-            <label style="display: block; font-size: 12px; color: #5a3b3b; font-weight: 600; margin-bottom: 5px;">Quantity *</label>
+            <label style="display: block; font-size: 12px; color: #5a3b3b; font-weight: 600; margin-bottom: 5px;">${qtyLabel} *</label>
             <input type="number" class="tierQuantity" required placeholder="e.g., 1" min="1" style="width: 100%; padding: 8px; border: 2px solid #e0c1d1; border-radius: 6px;">
           </div>
           <div style="flex: 1;">
@@ -723,9 +734,11 @@
           <button type="button" class="btn-danger" onclick="removePriceTier(this)" style="height: 38px; padding: 0 10px;">✕</button>
         </div>
       `;
-      // reset single price
+      // reset single price and product unit
       const sp = document.getElementById('productSinglePrice');
       if (sp) sp.value = '';
+      const pu = document.getElementById('productQuantityUnit');
+      if (pu) pu.value = getQuantityUnit();
       // ensure at least one empty product item row is present for new products
       setProductItemRows([]);
       document.getElementById('productModal').classList.add('show');
@@ -740,9 +753,10 @@
       const tier = document.createElement('div');
       tier.className = 'price-tier-row';
       tier.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;';
+      const qtyLabel = (document.getElementById('productQuantityUnit') && document.getElementById('productQuantityUnit').value.trim()) ? document.getElementById('productQuantityUnit').value.trim() : getQuantityUnit();
       tier.innerHTML = `
         <div style="flex: 1;">
-          <label style="display: block; font-size: 12px; color: #5a3b3b; font-weight: 600; margin-bottom: 5px;">Quantity *</label>
+          <label style="display: block; font-size: 12px; color: #5a3b3b; font-weight: 600; margin-bottom: 5px;">${qtyLabel} *</label>
           <input type="number" class="tierQuantity" required placeholder="e.g., 2" min="1" style="width: 100%; padding: 8px; border: 2px solid #e0c1d1; border-radius: 6px;">
         </div>
         <div style="flex: 1;">
@@ -815,9 +829,10 @@
         const row = document.createElement('div');
         row.className = 'price-tier-row';
         row.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;';
+        const qtyLabel = (document.getElementById('productQuantityUnit') && document.getElementById('productQuantityUnit').value.trim()) ? document.getElementById('productQuantityUnit').value.trim() : getQuantityUnit();
         row.innerHTML = `
           <div style="flex: 1;">
-            <label style="display: block; font-size: 12px; color: #5a3b3b; font-weight: 600; margin-bottom: 5px;">Quantity *</label>
+            <label style="display: block; font-size: 12px; color: #5a3b3b; font-weight: 600; margin-bottom: 5px;">${qtyLabel} *</label>
             <input type="number" class="tierQuantity" required min="1" value="${tier.quantity}" style="width: 100%; padding: 8px; border: 2px solid #e0c1d1; border-radius: 6px;">
           </div>
           <div style="flex: 1;">
@@ -883,6 +898,8 @@
         stock: isUnlimited ? null : parseInt(stock),
         unlimitedStock: isUnlimited,
         description,
+        // per-product quantity unit (optional)
+        quantityUnit: (document.getElementById('productQuantityUnit') && document.getElementById('productQuantityUnit').value) ? document.getElementById('productQuantityUnit').value.trim() : undefined,
         updatedAt: new Date().toISOString()
       };
 
@@ -946,6 +963,10 @@
       } else {
         setProductItemRows([]);
       }
+
+      // populate per-product unit if present
+      const pu = document.getElementById('productQuantityUnit');
+      if (pu) pu.value = product.quantityUnit || getQuantityUnit();
 
       document.getElementById('productModal').classList.add('show');
     }
@@ -1261,10 +1282,28 @@
         storeName: document.getElementById('storeName').value,
         instaHandle: document.getElementById('instaHandle').value,
         storeDescription: document.getElementById('storeDescription').value,
+        quantityUnit: (document.getElementById('quantityUnit') && document.getElementById('quantityUnit').value) ? document.getElementById('quantityUnit').value.trim() : 'ชิ้น',
         updatedAt: new Date().toISOString()
       };
       localStorage.setItem('storeSettings', JSON.stringify(settings));
       alert('Settings saved successfully!');
+    }
+
+    function getQuantityUnit() {
+      try {
+        const s = JSON.parse(localStorage.getItem('storeSettings') || '{}');
+        return s.quantityUnit || 'ชิ้น';
+      } catch (e) { return 'ชิ้น'; }
+    }
+
+    function loadStoreSettings() {
+      try {
+        const s = JSON.parse(localStorage.getItem('storeSettings') || '{}');
+        if (s.storeName) document.getElementById('storeName').value = s.storeName;
+        if (s.instaHandle) document.getElementById('instaHandle').value = s.instaHandle;
+        if (s.storeDescription) document.getElementById('storeDescription').value = s.storeDescription;
+        if (s.quantityUnit && document.getElementById('quantityUnit')) document.getElementById('quantityUnit').value = s.quantityUnit;
+      } catch (e) {}
     }
 
     // Export site data (products, gallery, orders, inquiries, settings, admin users)

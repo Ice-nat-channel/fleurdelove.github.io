@@ -48,6 +48,7 @@
   function loadProducts() {
     const products = JSON.parse(localStorage.getItem('products')) || [];
     const priceSection = document.getElementById('price');
+    const storeSettings = JSON.parse(localStorage.getItem('storeSettings') || '{}');
     
     if (products.length === 0) {
       priceSection.innerHTML = '<div class="card"><p style="text-align: center; color: #999;">ยังไม่มีสินค้า กรุณาไปที่ Admin Dashboard เพื่อเพิ่มสินค้า</p></div>';
@@ -57,22 +58,23 @@
     priceSection.innerHTML = '';
     
     products.forEach(product => {
+      const unit = product.quantityUnit || storeSettings.quantityUnit || 'ชิ้น';
       const card = document.createElement('div');
       card.className = 'card';
       // Build price tier HTML
       let priceHtml = '';
       if (product.prices && product.prices.length > 0) {
-        product.prices.forEach(tier => {
-          priceHtml += `<li><span class="price-qty">${tier.quantity} ${tier.quantity > 1 ? 'ชิ้น' : 'ชิ้น'}</span><span class="price-amt">฿${tier.price}</span></li>`;
-        });
+          product.prices.forEach(tier => {
+            priceHtml += `<li><span class="price-qty">${tier.quantity} ${unit}</span><span class="price-amt">฿${tier.price}</span></li>`;
+          });
       } else if (product.price) {
         // Fallback for old format
         priceHtml = `<li><span class="price-qty">ราคา</span><span class="price-amt">฿${product.price}</span></li>`;
       }
       
       const stockRow = product.unlimitedStock
-        ? ''
-        : `<li><span class="price-qty">คงเหลือ</span><span class="price-amt">${product.stock} ชิ้น</span></li>`;
+          ? ''
+          : `<li><span class="price-qty">คงเหลือ</span><span class="price-amt">${product.stock} ${unit}</span></li>`;
       // Build items HTML (optional list of name + priceText)
       let itemsHtml = '';
       if (product.items && product.items.length > 0) {
