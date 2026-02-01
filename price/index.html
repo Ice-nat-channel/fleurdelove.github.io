@@ -33,42 +33,77 @@
 
 <main class="page-content">
 
-<section id="price" class="full-viewport">
-  <div class="card">
-    <h2>Rose</h2>
-    <ul class="price-list" aria-label="Rose prices">
-      <li><span class="price-qty">1 ดอก</span><span class="price-amt">49 บาท</span></li>
-      <li><span class="price-qty">3 ดอก</span><span class="price-amt">145 บาท</span></li>
-      <li><span class="price-qty">5 ดอก</span><span class="price-amt">240 บาท</span></li>
-      <li><span class="price-qty">7 ดอก</span><span class="price-amt">330 บาท</span></li>
-    </ul>
-  </div>
-
-  <div class="card">
-    <h2>Velvet Wire</h2>
-    <ul class="price-list" aria-label="Velvet Wire prices">
-      <li><span class="price-qty">1 ดอก</span><span class="price-amt">49 บาท</span></li>
-      <li><span class="price-qty">3 ดอก</span><span class="price-amt">150 บาท</span></li>
-      <li><span class="price-qty">5 ดอก</span><span class="price-amt">245 บาท</span></li>
-    </ul>
-  </div>
-
-  <div class="card">
-    <h2>Decorations</h2>
-    <ul class="price-list" aria-label="Decorations">
-      <li><span class="price-qty">มุก<br><br>ฟิล์ม<br><br>ริบบิ้น<br><br>ออปชั่นตกแต่งอื่นๆ</span><span class="price-amt">เริ่มต้น 5 - 9 บาท</span></li>
-    </ul>
-  </div>
+<section id="price" class="full-viewport" id="priceSection">
+  <!-- Products will be loaded here from admin dashboard -->
 </section>
 
 </main>
 
 <footer>
-  © 2026 Fleur de Love | By N.Parin
+  © 2026 Fleur de Love | By N.Parin | <a href="/admin/login.html" style="color: inherit; text-decoration: none; opacity: 0.7; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">Admin</a>
 </footer>
 
 <script>
+  // Load products from admin dashboard
+  function loadProducts() {
+    const products = JSON.parse(localStorage.getItem('products')) || [];
+    const priceSection = document.getElementById('price');
+    
+    if (products.length === 0) {
+      priceSection.innerHTML = '<div class="card"><p style="text-align: center; color: #999;">ยังไม่มีสินค้า กรุณาไปที่ Admin Dashboard เพื่อเพิ่มสินค้า</p></div>';
+      return;
+    }
+    
+    priceSection.innerHTML = '';
+    
+    products.forEach(product => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      // Build price tier HTML
+      let priceHtml = '';
+      if (product.prices && product.prices.length > 0) {
+        product.prices.forEach(tier => {
+          priceHtml += `<li><span class="price-qty">${tier.quantity} ${tier.quantity > 1 ? 'ชิ้น' : 'ชิ้น'}</span><span class="price-amt">฿${tier.price}</span></li>`;
+        });
+      } else if (product.price) {
+        // Fallback for old format
+        priceHtml = `<li><span class="price-qty">ราคา</span><span class="price-amt">฿${product.price}</span></li>`;
+      }
+      
+      const stockRow = product.unlimitedStock
+        ? ''
+        : `<li><span class="price-qty">คงเหลือ</span><span class="price-amt">${product.stock} ชิ้น</span></li>`;
+      // Build items HTML (optional list of name + priceText)
+      let itemsHtml = '';
+      if (product.items && product.items.length > 0) {
+        itemsHtml = '<div style="background:#fff;border-radius:12px;padding:14px;margin:10px 0 16px;box-shadow:0 8px 24px rgba(0,0,0,0.06);">';
+        product.items.forEach(it => {
+          const name = it.name || '';
+          const priceText = it.priceText || '';
+          itemsHtml += `<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:6px 2px;border-radius:8px;">` +
+                       `<div style="font-weight:700;color:#5a3b3b;">${name}</div>` +
+                       `<div style="color:#c97a8a;font-weight:700;white-space:nowrap;margin-left:12px;">${priceText}</div>` +
+                       `</div>`;
+        });
+        itemsHtml += '</div>';
+      }
+
+      card.innerHTML = `
+        <h2>${product.name}</h2>
+        <p style="color: #666; font-size: 14px; margin-bottom: 8px;">${product.description || ''}</p>
+        ${itemsHtml}
+        <ul class="price-list" aria-label="${product.name} prices">
+          ${priceHtml}
+          ${stockRow}
+        </ul>
+      `;
+      priceSection.appendChild(card);
+    });
+  }
+
+  // Load on page load
   window.addEventListener('DOMContentLoaded', function() {
+    loadProducts();
     document.documentElement.classList.add('is-loaded');
   });
 </script>

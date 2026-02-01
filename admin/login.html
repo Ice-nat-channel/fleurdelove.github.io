@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Admin Login | Fleur de Love</title>
+  <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="icon" href="../icon.ico" type="image/x-icon">
+  <style>
+    body {
+      background: linear-gradient(135deg, #fde8ed 0%, #f5c6d9 100%);
+    }
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .login-card {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+    .login-card h1 {
+      text-align: center;
+      color: #5a3b3b;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #5a3b3b;
+      font-weight: 500;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0c1d1;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #d97087;
+    }
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #d97087 0%, #c9567d 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(217, 112, 135, 0.3);
+    }
+    .login-btn:active {
+      transform: translateY(0);
+    }
+    .error-message {
+      color: #d97087;
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+      display: none;
+    }
+    .manage-link {
+      display: block;
+      text-align: center;
+      margin-top: 12px;
+      color: #5a3b3b;
+      text-decoration: underline;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    /* simple modal for account manager */
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); align-items:center; justify-content:center; z-index:2000; }
+    .modal.show { display:flex; }
+    .modal-box { background:white; padding:20px; border-radius:12px; width:100%; max-width:520px; box-shadow:0 12px 36px rgba(0,0,0,0.18); }
+    .users-list { max-height:240px; overflow:auto; margin-bottom:12px; }
+    .user-row { display:flex; align-items:center; justify-content:space-between; padding:8px 6px; border-bottom:1px solid #f0e6e9; }
+    .user-row:last-child { border-bottom:none; }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <h1>Admin Login</h1>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" required placeholder="Enter username">
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required placeholder="Enter password">
+        </div>
+        <button type="submit" class="login-btn">Login</button>
+        <div class="error-message" id="errorMessage"></div>
+      </form>
+    </div>
+  </div>
+
+    
+
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const errorMessage = document.getElementById('errorMessage');
+
+    // Multi-account login stored in localStorage.adminUsers (array of {username,password})
+    function ensureDefaultAdmin() {
+      const users = JSON.parse(localStorage.getItem('adminUsers') || 'null');
+      if (!users || !Array.isArray(users) || users.length === 0) {
+        localStorage.setItem('adminUsers', JSON.stringify([{ username: 'admin', password: 'admin123' }]));
+      }
+    }
+
+    function getAdminUsers() {
+      try { return JSON.parse(localStorage.getItem('adminUsers')) || []; } catch(e) { return []; }
+    }
+
+    function saveAdminUsers(users) { localStorage.setItem('adminUsers', JSON.stringify(users)); }
+
+    // Initialize default user if none exist
+    ensureDefaultAdmin();
+
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const users = getAdminUsers();
+      const match = users.find(u => u.username === username && u.password === password);
+      if (match) {
+        localStorage.setItem('adminLoggedIn', 'true');
+        localStorage.setItem('adminUsername', username);
+        window.location.href = './dashboard.html';
+        return;
+      }
+      errorMessage.textContent = 'Invalid username or password';
+      errorMessage.style.display = 'block';
+    });
+
+    
+  </script>
+</body>
+</html>

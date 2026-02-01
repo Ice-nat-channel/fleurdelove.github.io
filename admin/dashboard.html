@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Admin Dashboard | Fleur de Love</title>
+  <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="icon" href="../icon.ico" type="image/x-icon">
+  <style>
+    body {
+      background: #f5f5f5;
+      margin: 0;
+    }
+    .admin-container {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      background: linear-gradient(135deg, #5a3b3b 0%, #7a4a4a 100%);
+      color: white;
+      padding: 20px;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .main-content {
+      margin-left: 250px;
+      flex: 1;
+      padding: 30px;
+    }
+    .sidebar h2 {
+      color: #fff;
+      margin-bottom: 30px;
+      text-align: center;
+      font-size: 24px;
+    }
+    .sidebar-menu {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar-menu li {
+      margin-bottom: 10px;
+    }
+    .sidebar-menu a {
+      color: #ddd;
+      text-decoration: none;
+      display: block;
+      padding: 12px 15px;
+      border-radius: 8px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .sidebar-menu a:hover,
+    .sidebar-menu a.active {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+    .logout-btn {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      background: #d97087;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    .logout-btn:hover {
+      background: #c9567d;
+    }
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    .dashboard-header h1 {
+      color: #5a3b3b;
+      font-size: 32px;
+    }
+    .user-info {
+      color: #666;
+      font-size: 14px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .stat-card {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    .stat-card h3 {
+      color: #5a3b3b;
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #d97087;
+    }
+    .content-section {
+      display: none;
+    }
+    .content-section.active {
+      display: block;
+    }
+    .btn-primary {
+      padding: 10px 20px;
+      background: #d97087;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    .btn-primary:hover {
+      background: #c9567d;
+    }
+    .btn-secondary {
+      padding: 6px 12px;
+      background: #e0c1d1;
+      color: #5a3b3b;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+      margin-right: 5px;
+    }
+    .btn-secondary:hover {
+      background: #d97087;
+      color: white;
+    }
+    .btn-danger {
+      padding: 6px 12px;
+      background: #c9567d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    .btn-danger:hover {
+      background: #b0475d;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    table thead {
+      background: #f5f5f5;
+    }
+    table th {
+      padding: 15px;
+      text-align: left;
+      color: #5a3b3b;
+      font-weight: 600;
+      border-bottom: 2px solid #e0c1d1;
+    }
+    table td {
+      padding: 15px;
+      border-bottom: 1px solid #e0c1d1;
+    }
+    table tr:hover {
+      background: #fafafa;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      overflow: auto;
+    }
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-header h2 {
+      color: #5a3b3b;
+      margin: 0;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: #999;
+      transition: color 0.3s;
+    }
+    .close-btn:hover {
+      color: #333;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #5a3b3b;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #e0c1d1;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #d97087;
+      box-shadow: 0 0 8px rgba(217, 112, 135, 0.2);
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .form-actions button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .form-actions .btn-save {
+      background: #d97087;
+      color: white;
+    }
+    .form-actions .btn-save:hover {
+      background: #c9567d;
+    }
+    .form-actions .btn-cancel {
+      background: #e0c1d1;
+      color: #5a3b3b;
+    }
+    .form-actions .btn-cancel:hover {
+      background: #d1a5b8;
+    }
+    .alert {
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .alert.show {
+      display: block;
+    }
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .alert-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+      .main-content {
+        margin-left: 0;
+      }
+      .sidebar-menu {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 60px;
+      }
+      .sidebar-menu li {
+        flex: 1;
+        min-width: 150px;
+      }
+      .logout-btn {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        right: auto;
+        margin-top: 20px;
+      }
+      .modal-content {
+        width: 95%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <aside class="sidebar">
+      <h2>Admin</h2>
+      <ul class="sidebar-menu">
+        <li><a href="#" class="menu-link active" data-section="dashboard">📊 Dashboard</a></li>
+        <li><a href="#" class="menu-link" data-section="products">🌸 Products</a></li>
+        <li><a href="#" class="menu-link" data-section="gallery">🖼️ Gallery</a></li>
+        <!--<li><a href="#" class="menu-link" data-section="orders">📦 Orders</a></li>-->
+        <!--<li><a href="#" class="menu-link" data-section="inquiries">💬 Inquiries</a></li>-->
+        <li><a href="#" class="menu-link" data-section="settings">⚙️ Settings</a></li>
+      </ul>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </aside>
+
+    <main class="main-content">
+      <div class="dashboard-header">
+        <h1>Dashboard</h1>
+        <div class="user-info">
+          <p>Welcome, <strong id="usernameDisplay">Admin</strong></p>
+        </div>
+      </div>
+
+      <!-- Dashboard Section -->
+      <section id="dashboard" class="content-section active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h3>Total Products</h3>
+            <div class="value" id="totalProducts">0</div>
+          </div>
+          <div class="stat-card">
+            <h3>Gallery Items</h3>
+            <div class="value" id="totalGallery">0</div>
+          </div>
+          <div class="stat-card">
+            <h3>Orders</h3>
+            <div class="value" id="totalOrders">0</div>
+          </div>
+          <div class="stat-card">
+            <h3>Inquiries</h3>
+            <div class="value" id="totalInquiries">0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Products Section -->
+      <section id="products" class="content-section">
+        <h2>Manage Products</h2>
+        <div class="alert" id="productAlert"></div>
+        <button class="btn-primary" onclick="openProductModal()">+ Add Product</button>
+        <table id="productsTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productsTableBody">
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Gallery Section -->
+      <section id="gallery" class="content-section">
+        <h2>Manage Gallery</h2>
+        <div class="alert" id="galleryAlert"></div>
+        <button class="btn-primary" onclick="openGalleryModal()">+ Add Image</button>
+        <table id="galleryTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Image URL</th>
+              <th>Upload Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="galleryTableBody">
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Orders Section -->
+      <section id="orders" class="content-section">
+        <h2>Orders</h2>
+        <table id="ordersTable">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Total</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTableBody">
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Inquiries Section -->
+      <section id="inquiries" class="content-section">
+        <h2>Customer Inquiries</h2>
+        <table id="inquiriesTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Message</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inquiriesTableBody">
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Settings Section -->
+      <section id="settings" class="content-section">
+        <h2>Settings</h2>
+        <div style="background: white; padding: 25px; border-radius: 12px;">
+          <div class="form-group">
+            <label>Store Name</label>
+            <input type="text" id="storeName" value="Fleur de Love">
+          </div>
+          <div class="form-group">
+            <label>Instagram Handle</label>
+            <input type="text" id="instaHandle" value="@afleur_de_love">
+          </div>
+          <div class="form-group">
+            <label>Store Description</label>
+            <textarea id="storeDescription" placeholder="Enter store description">ร้านดอกไม้โทนหวาน หรู โรแมนติก</textarea>
+          </div>
+          <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+          <hr style="margin:18px 0;border:none;border-top:1px solid #f0e6e9;">
+          <h3 style="margin-top:8px;color:#5a3b3b;">Admin Accounts</h3>
+          <div id="adminAccountsBox" style="margin-top:10px;">
+            <div id="adminUsersList" style="background:#fff;padding:12px;border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.04); max-height:180px; overflow:auto; margin-bottom:10px;"></div>
+            <div style="display:flex; gap:8px;">
+              <input id="adminNewUser" placeholder="Username" style="flex:1; padding:8px; border:2px solid #e0c1d1; border-radius:6px;">
+              <input id="adminNewPass" placeholder="Password" type="password" style="flex:1; padding:8px; border:2px solid #e0c1d1; border-radius:6px;">
+              <button class="btn-primary" id="addAdminBtn" style="flex:0 0 120px;">Add</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Product Modal -->
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="productModalTitle">Add Product</h2>
+        <button class="close-btn" onclick="closeProductModal()">&times;</button>
+      </div>
+      <div class="alert" id="formAlert"></div>
+      <form id="productForm" onsubmit="saveProduct(event)">
+        <div class="form-group">
+          <label for="productName">Product Name *</label>
+          <input type="text" id="productName" required placeholder="e.g., Rose Bouquet">
+        </div>
+        <div class="form-group">
+          <label for="productDescription">Description</label>
+          <textarea id="productDescription" placeholder="Product description..."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="productStock">Stock Quantity *</label>
+          <input type="number" id="productStock" required placeholder="e.g., 25" min="0">
+          <label style="display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; color: #5a3b3b;">
+            <input type="checkbox" id="productUnlimited" onchange="toggleUnlimitedStock()">
+            Unlimited stock (infinite)
+          </label>
+        </div>
+        
+        <h4 style="color: #5a3b3b; margin-top: 20px; margin-bottom: 10px;">Price Tiers</h4>
+        <p style="font-size: 12px; color: #999; margin-bottom: 15px;">Add multiple prices based on quantity (e.g., 1 item = 59฿, 2 items = 109฿)</p>
+        
+        <div class="form-group">
+          <label for="productSinglePrice">Single Price (฿) — optional if using price tiers</label>
+          <input type="number" id="productSinglePrice" placeholder="e.g., 59" step="1" min="0" style="width:100%; padding:8px; border:2px solid #e0c1d1; border-radius:6px;">
+        </div>
+
+        <div id="pricesTierContainer">
+          <div class="price-tier-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;">
+            <div style="flex: 1;">
+              <label style="display: block; font-size: 12px; color: #5a3b3b; font-weight: 600; margin-bottom: 5px;">Quantity *</label>
+              <input type="number" class="tierQuantity" required placeholder="e.g., 1" min="1" style="width: 100%; padding: 8px; border: 2px solid #e0c1d1; border-radius: 6px;">
+            </div>
+            <div style="flex: 1;">
+              <label style="display: block; font-size: 12px; color: #5a3b3b; font-weight: 600; margin-bottom: 5px;">Price (฿) *</label>
+              <input type="number" class="tierPrice" required placeholder="e.g., 59" step="1" min="0" style="width: 100%; padding: 8px; border: 2px solid #e0c1d1; border-radius: 6px;">
+            </div>
+            <button type="button" class="btn-danger" onclick="removePriceTier(this)" style="height: 38px; padding: 0 10px;">✕</button>
+          </div>
+        </div>
+        
+        <button type="button" class="btn-secondary" onclick="addPriceTier()" style="margin-bottom: 20px; margin-top: 10px;">+ Add Price Tier</button>
+        
+        <h4 style="color: #5a3b3b; margin-top: 20px; margin-bottom: 10px;">Product Items (optional)</h4>
+        <p style="font-size: 12px; color: #999; margin-bottom: 15px;">Add items that belong to this product (name + optional price text). These will display as a list on the public page.</p>
+        <div id="productItemsContainer">
+          <div class="product-item-row" style="display:flex; gap:10px; margin-bottom:10px; align-items:flex-end;">
+            <div style="flex: 2;">
+              <label style="display:block; font-size:12px; color:#5a3b3b; font-weight:600; margin-bottom:5px;">Item name</label>
+              <input type="text" class="itemName" placeholder="e.g., มุก" style="width:100%; padding:8px; border:2px solid #e0c1d1; border-radius:6px;">
+            </div>
+            <div style="flex: 1;">
+              <label style="display:block; font-size:12px; color:#5a3b3b; font-weight:600; margin-bottom:5px;">Price text</label>
+              <input type="text" class="itemPriceText" placeholder="e.g., เริ่มต้น 5 - 9 บาท" style="width:100%; padding:8px; border:2px solid #e0c1d1; border-radius:6px;">
+            </div>
+            <button type="button" class="btn-danger" onclick="removeProductItem(this)" style="height:38px; padding:0 10px;">✕</button>
+          </div>
+        </div>
+        <button type="button" class="btn-secondary" onclick="addProductItem()" style="margin-bottom: 20px; margin-top: 10px;">+ Add Item</button>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn-save">Save Product</button>
+          <button type="button" class="btn-cancel" onclick="closeProductModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Gallery Modal -->
+  <div id="galleryModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="galleryModalTitle">Add Gallery Image</h2>
+        <button class="close-btn" onclick="closeGalleryModal()">&times;</button>
+      </div>
+      <div class="alert" id="galleryFormAlert"></div>
+      <form id="galleryForm" onsubmit="saveGalleryImage(event)">
+        <div class="form-group">
+          <label for="imageTitle">Image Title *</label>
+          <input type="text" id="imageTitle" required placeholder="e.g., Spring Flowers">
+        </div>
+        <div style="border: 2px dashed #e0c1d1; border-radius: 6px; padding: 20px; text-align: center; margin-bottom: 15px; background: #fafafa; cursor: pointer;" id="imageDropZone" onclick="document.getElementById('imageFile').click()">
+          <input type="file" id="imageFile" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
+          <p style="color: #5a3b3b; margin: 0; font-weight: 600;">📁 Click to upload or drag & drop image</p>
+          <p style="color: #999; margin: 5px 0 0 0; font-size: 12px;">Supported: JPG, PNG, GIF, WebP</p>
+          <div id="imagePreview" style="margin-top: 10px; display: none;">
+            <img id="previewImg" style="max-width: 100%; max-height: 200px; border-radius: 6px;">
+            <p id="previewName" style="color: #5a3b3b; margin-top: 5px; font-size: 12px;"></p>
+          </div>
+        </div>
+        <p style="text-align: center; color: #999; font-size: 12px; margin: 10px 0;">OR</p>
+        <div class="form-group">
+          <label for="imageUrl">Image URL</label>
+          <input type="url" id="imageUrl" placeholder="https://example.com/image.jpg (optional)">
+        </div>
+        <div class="form-group">
+          <label for="imageAlt">Alt Text (for accessibility)</label>
+          <input type="text" id="imageAlt" placeholder="Describe the image...">
+        </div>
+        <div class="form-group">
+          <label for="imageCategory">Category</label>
+          <select id="imageCategory">
+            <option value="">Select Category</option>
+            <option value="bouquet">Bouquet</option>
+            <option value="arrangement">Arrangement</option>
+            <option value="special">Special Occasion</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-save">Save Image</button>
+          <button type="button" class="btn-cancel" onclick="closeGalleryModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Check if user is logged in
+    if (!localStorage.getItem('adminLoggedIn')) {
+      window.location.href = './login.html';
+    }
+
+    // Display username
+    const username = localStorage.getItem('adminUsername');
+    document.getElementById('usernameDisplay').textContent = username || 'Admin';
+
+    let editingProductIndex = null;
+    let editingGalleryIndex = null;
+    let editingGalleryExistingUrl = '';
+    let editingGalleryIsFileUpload = false;
+
+    // Load data from localStorage
+    function loadData() {
+      loadProducts();
+      loadGalleryImages();
+      loadOrders();
+      loadInquiries();
+      updateStats();
+      // render admin users in settings (account management)
+      if (typeof renderAdminUsers === 'function') renderAdminUsers();
+    }
+
+    function updateStats() {
+      const products = JSON.parse(localStorage.getItem('products')) || [];
+      const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+      const orders = JSON.parse(localStorage.getItem('orders')) || [];
+      const inquiries = JSON.parse(localStorage.getItem('inquiries')) || [];
+
+      document.getElementById('totalProducts').textContent = products.length;
+      document.getElementById('totalGallery').textContent = gallery.length;
+      document.getElementById('totalOrders').textContent = orders.length;
+      document.getElementById('totalInquiries').textContent = inquiries.length;
+    }
+
+    // Products Management
+    function loadProducts() {
+      const products = JSON.parse(localStorage.getItem('products')) || [];
+      const tbody = document.getElementById('productsTableBody');
+      tbody.innerHTML = '';
+
+      if (products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">No products yet. Add one to get started.</td></tr>';
+        return;
+      }
+
+      products.forEach((product, index) => {
+        const row = document.createElement('tr');
+        let priceDisplay = '';
+        if (product.prices && product.prices.length > 0) {
+          priceDisplay = `฿${product.prices[0].price}`;
+          if (product.prices.length > 1) {
+            priceDisplay += ` - ฿${product.prices[product.prices.length - 1].price}`;
+          }
+        } else if (product.price) {
+          priceDisplay = `฿${product.price}`;
+        }
+        const stockDisplay = product.unlimitedStock ? '∞' : product.stock;
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${product.name}</td>
+          <td>${priceDisplay}</td>
+          <td>${stockDisplay}</td>
+          <td>
+            <button class="btn-secondary" onclick="editProduct(${index})">Edit</button>
+            <button class="btn-danger" onclick="deleteProduct(${index})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function openProductModal() {
+      editingProductIndex = null;
+      document.getElementById('productForm').reset();
+      document.getElementById('productModalTitle').textContent = 'Add Product';
+      document.getElementById('productUnlimited').checked = false;
+      document.getElementById('productStock').disabled = false;
+      document.getElementById('formAlert').classList.remove('show');
+      document.getElementById('pricesTierContainer').innerHTML = `
+        <div class="price-tier-row" style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;">
+          <div style="flex: 1;">
+            <label style="display: block; font-size: 12px; color: #5a3b3b; font-weight: 600; margin-bottom: 5px;">Quantity *</label>
+            <input type="number" class="tierQuantity" required placeholder="e.g., 1" min="1" style="width: 100%; padding: 8px; border: 2px solid #e0c1d1; border-radius: 6px;">
+          </div>
+          <div style="flex: 1;">
+            <label style="display: block; font-size: 12px; color: #5a3b3b; font-weight: 600; margin-bottom: 5px;">Price (฿) *</label>
+            <input type="number" class="tierPrice" required placeholder="e.g., 59" step="1" min="0" style="width: 100%; padding: 8px; border: 2px solid #e0c1d1; border-radius: 6px;">
+          </div>
+          <button type="button" class="btn-danger" onclick="removePriceTier(this)" style="height: 38px; padding: 0 10px;">✕</button>
+        </div>
+      `;
+      // reset single price
+      const sp = document.getElementById('productSinglePrice');
+      if (sp) sp.value = '';
+      // ensure at least one empty product item row is present for new products
+      setProductItemRows([]);
+      document.getElementById('productModal').classList.add('show');
+    }
+
+    function closeProductModal() {
+      document.getElementById('productModal').classList.remove('show');
+    }
+
+    function addPriceTier() {
+      const container = document.getElementById('pricesTierContainer');
+      const tier = document.createElement('div');
+      tier.className = 'price-tier-row';
+      tier.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;';
+      tier.innerHTML = `
+        <div style="flex: 1;">
+          <label style="display: block; font-size: 12px; color: #5a3b3b; font-weight: 600; margin-bottom: 5px;">Quantity *</label>
+          <input type="number" class="tierQuantity" required placeholder="e.g., 2" min="1" style="width: 100%; padding: 8px; border: 2px solid #e0c1d1; border-radius: 6px;">
+        </div>
+        <div style="flex: 1;">
+          <label style="display: block; font-size: 12px; color: #5a3b3b; font-weight: 600; margin-bottom: 5px;">Price (฿) *</label>
+          <input type="number" class="tierPrice" required placeholder="e.g., 109" step="1" min="0" style="width: 100%; padding: 8px; border: 2px solid #e0c1d1; border-radius: 6px;">
+        </div>
+        <button type="button" class="btn-danger" onclick="removePriceTier(this)" style="height: 38px; padding: 0 10px;">✕</button>
+      `;
+      container.appendChild(tier);
+    }
+
+    function addProductItem() {
+      const container = document.getElementById('productItemsContainer');
+      const row = document.createElement('div');
+      row.className = 'product-item-row';
+      row.style.cssText = 'display:flex; gap:10px; margin-bottom:10px; align-items:flex-end;';
+      row.innerHTML = `
+        <div style="flex: 2;">
+          <label style="display:block; font-size:12px; color:#5a3b3b; font-weight:600; margin-bottom:5px;">Item name</label>
+          <input type="text" class="itemName" placeholder="e.g., มุก" style="width:100%; padding:8px; border:2px solid #e0c1d1; border-radius:6px;">
+        </div>
+        <div style="flex: 1;">
+          <label style="display:block; font-size:12px; color:#5a3b3b; font-weight:600; margin-bottom:5px;">Price text</label>
+          <input type="text" class="itemPriceText" placeholder="e.g., เริ่มต้น 5 - 9 บาท" style="width:100%; padding:8px; border:2px solid #e0c1d1; border-radius:6px;">
+        </div>
+        <button type="button" class="btn-danger" onclick="removeProductItem(this)" style="height:38px; padding:0 10px;">✕</button>
+      `;
+      container.appendChild(row);
+    }
+
+    function removeProductItem(btn) {
+      btn.parentElement.remove();
+    }
+
+    function setProductItemRows(items) {
+      const container = document.getElementById('productItemsContainer');
+      container.innerHTML = '';
+      if (!items || items.length === 0) {
+        // Keep a blank row available
+        addProductItem();
+        return;
+      }
+      items.forEach((it) => {
+        const row = document.createElement('div');
+        row.className = 'product-item-row';
+        row.style.cssText = 'display:flex; gap:10px; margin-bottom:10px; align-items:flex-end;';
+        row.innerHTML = `
+          <div style="flex: 2;">
+            <label style="display:block; font-size:12px; color:#5a3b3b; font-weight:600; margin-bottom:5px;">Item name</label>
+            <input type="text" class="itemName" value="${(it.name||'').replace(/"/g,'&quot;')}" style="width:100%; padding:8px; border:2px solid #e0c1d1; border-radius:6px;">
+          </div>
+          <div style="flex: 1;">
+            <label style="display:block; font-size:12px; color:#5a3b3b; font-weight:600; margin-bottom:5px;">Price text</label>
+            <input type="text" class="itemPriceText" value="${(it.priceText||'').replace(/"/g,'&quot;')}" style="width:100%; padding:8px; border:2px solid #e0c1d1; border-radius:6px;">
+          </div>
+          <button type="button" class="btn-danger" onclick="removeProductItem(this)" style="height:38px; padding:0 10px;">✕</button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function removePriceTier(btn) {
+      btn.parentElement.remove();
+    }
+
+    function setPriceTierRows(prices) {
+      const container = document.getElementById('pricesTierContainer');
+      container.innerHTML = '';
+      prices.forEach((tier) => {
+        const row = document.createElement('div');
+        row.className = 'price-tier-row';
+        row.style.cssText = 'display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;';
+        row.innerHTML = `
+          <div style="flex: 1;">
+            <label style="display: block; font-size: 12px; color: #5a3b3b; font-weight: 600; margin-bottom: 5px;">Quantity *</label>
+            <input type="number" class="tierQuantity" required min="1" value="${tier.quantity}" style="width: 100%; padding: 8px; border: 2px solid #e0c1d1; border-radius: 6px;">
+          </div>
+          <div style="flex: 1;">
+            <label style="display: block; font-size: 12px; color: #5a3b3b; font-weight: 600; margin-bottom: 5px;">Price (฿) *</label>
+            <input type="number" class="tierPrice" required step="1" min="0" value="${tier.price}" style="width: 100%; padding: 8px; border: 2px solid #e0c1d1; border-radius: 6px;">
+          </div>
+          <button type="button" class="btn-danger" onclick="removePriceTier(this)" style="height: 38px; padding: 0 10px;">✕</button>
+        `;
+        container.appendChild(row);
+      });
+      // clear single price when explicit tiers are set
+      const sp = document.getElementById('productSinglePrice');
+      if (sp) sp.value = '';
+    }
+
+    function toggleUnlimitedStock() {
+      const isUnlimited = document.getElementById('productUnlimited').checked;
+      const stockInput = document.getElementById('productStock');
+      if (isUnlimited) {
+        stockInput.value = '';
+        stockInput.disabled = true;
+        stockInput.removeAttribute('required');
+      } else {
+        stockInput.disabled = false;
+        stockInput.setAttribute('required', 'required');
+      }
+    }
+
+    function saveProduct(event) {
+      event.preventDefault();
+      const name = document.getElementById('productName').value;
+      const stockInput = document.getElementById('productStock');
+      const isUnlimited = document.getElementById('productUnlimited').checked;
+      const stock = isUnlimited ? null : stockInput.value;
+      const description = document.getElementById('productDescription').value;
+
+      // Get all price tiers (if any)
+      const tierQuantities = Array.from(document.querySelectorAll('.tierQuantity')).map(el => parseInt(el.value));
+      const tierPrices = Array.from(document.querySelectorAll('.tierPrice')).map(el => parseInt(el.value));
+      const prices = tierQuantities.map((qty, idx) => ({ quantity: qty, price: tierPrices[idx] })).filter(p => !isNaN(p.quantity) && !isNaN(p.price)).sort((a, b) => a.quantity - b.quantity);
+
+      // single price fallback (used when no tiers are defined)
+      const singlePriceVal = (document.getElementById('productSinglePrice') && document.getElementById('productSinglePrice').value) ? document.getElementById('productSinglePrice').value.trim() : '';
+
+      if (prices.length === 0 && singlePriceVal === '') {
+        showAlert('formAlert', 'Please add at least one price tier or provide a single price', 'error');
+        return;
+      }
+
+      // Collect sub-items (pair names with their corresponding price text per row)
+      const items = Array.from(document.querySelectorAll('.product-item-row')).map(row => {
+        const nameEl = row.querySelector('.itemName');
+        const priceEl = row.querySelector('.itemPriceText');
+        const name = nameEl ? nameEl.value.trim() : '';
+        const priceText = priceEl ? priceEl.value.trim() : '';
+        return { name, priceText };
+      }).filter(it => it.name && it.name.length > 0);
+
+      const products = JSON.parse(localStorage.getItem('products')) || [];
+      const payload = {
+        name,
+        items,
+        stock: isUnlimited ? null : parseInt(stock),
+        unlimitedStock: isUnlimited,
+        description,
+        updatedAt: new Date().toISOString()
+      };
+
+      // prefer tiers when present, otherwise set single `price` field
+      if (prices.length > 0) {
+        payload.prices = prices;
+      } else if (singlePriceVal !== '') {
+        payload.price = parseInt(singlePriceVal);
+      }
+
+      if (editingProductIndex !== null) {
+        const existing = products[editingProductIndex] || {};
+        payload.createdAt = existing.createdAt || new Date().toISOString();
+        products[editingProductIndex] = payload;
+      } else {
+        payload.createdAt = new Date().toISOString();
+        products.push(payload);
+      }
+
+      localStorage.setItem('products', JSON.stringify(products));
+      closeProductModal();
+      loadProducts();
+      updateStats();
+      showAlert('productAlert', editingProductIndex !== null ? 'Product updated successfully!' : 'Product added successfully!', 'success');
+      editingProductIndex = null;
+    }
+
+    function editProduct(index) {
+      const products = JSON.parse(localStorage.getItem('products')) || [];
+      const product = products[index];
+      if (!product) return;
+      editingProductIndex = index;
+      document.getElementById('productModalTitle').textContent = 'Edit Product';
+      document.getElementById('formAlert').classList.remove('show');
+      document.getElementById('productName').value = product.name || '';
+      document.getElementById('productDescription').value = product.description || '';
+      document.getElementById('productUnlimited').checked = !!product.unlimitedStock;
+      document.getElementById('productStock').disabled = !!product.unlimitedStock;
+      if (!product.unlimitedStock) {
+        document.getElementById('productStock').value = product.stock ?? '';
+      } else {
+        document.getElementById('productStock').value = '';
+      }
+
+      if (product.prices && product.prices.length > 0) {
+        setPriceTierRows(product.prices);
+        // clear single price when tiers exist
+        const sp = document.getElementById('productSinglePrice'); if (sp) sp.value = '';
+      } else if (product.price) {
+        // populate single price when product had a single price
+        const sp = document.getElementById('productSinglePrice'); if (sp) sp.value = product.price;
+        setPriceTierRows([]);
+      } else {
+        setPriceTierRows([]);
+        const sp = document.getElementById('productSinglePrice'); if (sp) sp.value = '';
+      }
+
+      // Load product items if any
+      if (product.items && product.items.length > 0) {
+        setProductItemRows(product.items);
+      } else {
+        setProductItemRows([]);
+      }
+
+      document.getElementById('productModal').classList.add('show');
+    }
+
+    function deleteProduct(index) {
+      if (confirm('Are you sure you want to delete this product?')) {
+        const products = JSON.parse(localStorage.getItem('products')) || [];
+        products.splice(index, 1);
+        localStorage.setItem('products', JSON.stringify(products));
+        loadProducts();
+        updateStats();
+      }
+    }
+
+    // Gallery Management
+    function loadGalleryImages() {
+      const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+      const tbody = document.getElementById('galleryTableBody');
+      tbody.innerHTML = '';
+
+      if (gallery.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">No images yet. Upload one to get started.</td></tr>';
+        return;
+      }
+
+      gallery.forEach((image, index) => {
+        const date = new Date(image.uploadDate).toLocaleDateString('th-TH');
+        const row = document.createElement('tr');
+        const viewLink = image.isFileUpload ? 
+          `<img src="${image.url}" style="max-height: 50px; border-radius: 4px; cursor: pointer;" onclick="viewGalleryImage('${image.url}')">` :
+          `<a href="${image.url}" target="_blank" style="color:#d97087; text-decoration:none;">View</a>`;
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${image.title}</td>
+          <td>${viewLink}</td>
+          <td>${date}</td>
+          <td>
+            <button class="btn-secondary" onclick="editGallery(${index})">Edit</button>
+            <button class="btn-danger" onclick="deleteGallery(${index})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function viewGalleryImage(imageUrl) {
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:2000; cursor:pointer;';
+      modal.innerHTML = `<img src="${imageUrl}" style="max-width:90%; max-height:90%; border-radius:8px;">`;
+      modal.onclick = () => modal.remove();
+      document.body.appendChild(modal);
+    }
+
+    function openGalleryModal() {
+      editingGalleryIndex = null;
+      editingGalleryExistingUrl = '';
+      editingGalleryIsFileUpload = false;
+      document.getElementById('galleryForm').reset();
+      document.getElementById('imageFile').value = '';
+      document.getElementById('imagePreview').style.display = 'none';
+      document.getElementById('imageUrl').value = '';
+      document.getElementById('imageAlt').value = '';
+      document.getElementById('imageCategory').value = '';
+      document.getElementById('galleryModalTitle').textContent = 'Add Gallery Image';
+      document.getElementById('galleryFormAlert').classList.remove('show');
+      document.getElementById('galleryModal').classList.add('show');
+    }
+
+    function closeGalleryModal() {
+      document.getElementById('galleryModal').classList.remove('show');
+    }
+
+    function saveGalleryImage(event) {
+      event.preventDefault();
+      const title = document.getElementById('imageTitle').value;
+      const url = document.getElementById('imageUrl').value;
+      const alt = document.getElementById('imageAlt').value;
+      const category = document.getElementById('imageCategory').value;
+      const fileInput = document.getElementById('imageFile');
+      const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+
+      const hasFile = fileInput.files.length > 0;
+      const hasUrl = !!url;
+      const hasExisting = editingGalleryIndex !== null && !!editingGalleryExistingUrl;
+
+      // Check if either file is selected or URL is provided
+      if (!hasFile && !hasUrl && !hasExisting) {
+        showAlert('galleryFormAlert', 'Please upload an image or provide a URL', 'error');
+        return;
+      }
+
+      // If file is selected, convert to base64
+      if (hasFile) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+          const imageData = e.target.result;
+          const payload = {
+            title,
+            url: imageData,
+            alt,
+            category,
+            uploadDate: new Date().toISOString(),
+            isFileUpload: true
+          };
+
+          if (editingGalleryIndex !== null) {
+            gallery[editingGalleryIndex] = payload;
+          } else {
+            gallery.push(payload);
+          }
+
+          localStorage.setItem('gallery', JSON.stringify(gallery));
+          closeGalleryModal();
+          loadGalleryImages();
+          updateStats();
+          showAlert('galleryAlert', editingGalleryIndex !== null ? 'Image updated successfully!' : 'Image uploaded successfully!', 'success');
+          editingGalleryIndex = null;
+        };
+        
+        reader.readAsDataURL(file);
+      } else {
+        // Use URL or keep existing
+        const finalUrl = hasUrl ? url : editingGalleryExistingUrl;
+        const payload = {
+          title,
+          url: finalUrl,
+          alt,
+          category,
+          uploadDate: new Date().toISOString(),
+          isFileUpload: hasUrl ? false : editingGalleryIsFileUpload
+        };
+
+        if (editingGalleryIndex !== null) {
+          gallery[editingGalleryIndex] = payload;
+        } else {
+          gallery.push(payload);
+        }
+
+        localStorage.setItem('gallery', JSON.stringify(gallery));
+        closeGalleryModal();
+        loadGalleryImages();
+        updateStats();
+        showAlert('galleryAlert', editingGalleryIndex !== null ? 'Image updated successfully!' : 'Image added successfully!', 'success');
+        editingGalleryIndex = null;
+      }
+    }
+
+    function handleImageSelect(event) {
+      const file = event.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('previewImg').src = e.target.result;
+          document.getElementById('previewName').textContent = file.name;
+          document.getElementById('imagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Enable drag and drop
+    const dropZone = document.getElementById('imageDropZone');
+    if (dropZone) {
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => {
+          dropZone.style.background = '#f0e8f0';
+          dropZone.style.borderColor = '#d97087';
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => {
+          dropZone.style.background = '#fafafa';
+          dropZone.style.borderColor = '#e0c1d1';
+        });
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        document.getElementById('imageFile').files = files;
+        handleImageSelect({ target: { files: files } });
+      });
+    }
+
+    function editGallery(index) {
+      const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+      const image = gallery[index];
+      if (!image) return;
+
+      editingGalleryIndex = index;
+      editingGalleryExistingUrl = image.url;
+      editingGalleryIsFileUpload = !!image.isFileUpload;
+
+      document.getElementById('galleryForm').reset();
+      document.getElementById('galleryFormAlert').classList.remove('show');
+      document.getElementById('imageTitle').value = image.title || '';
+      document.getElementById('imageAlt').value = image.alt || '';
+      document.getElementById('imageCategory').value = image.category || '';
+      document.getElementById('imageUrl').value = image.isFileUpload ? '' : (image.url || '');
+      document.getElementById('imageFile').value = '';
+
+      if (image.isFileUpload) {
+        document.getElementById('previewImg').src = image.url;
+        document.getElementById('previewName').textContent = 'Current uploaded image';
+        document.getElementById('imagePreview').style.display = 'block';
+      } else {
+        document.getElementById('imagePreview').style.display = 'none';
+      }
+
+      document.getElementById('galleryModalTitle').textContent = 'Edit Gallery Image';
+      document.getElementById('galleryModal').classList.add('show');
+    }
+
+    function deleteGallery(index) {
+      if (confirm('Are you sure you want to delete this image?')) {
+        const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+        gallery.splice(index, 1);
+        localStorage.setItem('gallery', JSON.stringify(gallery));
+        loadGalleryImages();
+        updateStats();
+      }
+    }
+
+    // Orders Management
+    function loadOrders() {
+      const orders = JSON.parse(localStorage.getItem('orders')) || [];
+      const tbody = document.getElementById('ordersTableBody');
+      tbody.innerHTML = '';
+
+      if (orders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#999;">No orders yet.</td></tr>';
+        return;
+      }
+
+      orders.forEach((order) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${order.id}</td>
+          <td>${order.customer}</td>
+          <td>${order.date}</td>
+          <td><span style="background:#d4edda; color:#155724; padding:4px 8px; border-radius:4px;">${order.status}</span></td>
+          <td>฿${order.total}</td>
+          <td>
+            <button class="btn-secondary" onclick="viewOrder('${order.id}')">View</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function viewOrder(orderId) {
+      alert('Order details for ' + orderId + ' would display here.');
+    }
+
+    // Inquiries Management
+    function loadInquiries() {
+      const inquiries = JSON.parse(localStorage.getItem('inquiries')) || [];
+      const tbody = document.getElementById('inquiriesTableBody');
+      tbody.innerHTML = '';
+
+      if (inquiries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">No inquiries yet.</td></tr>';
+        return;
+      }
+
+      inquiries.forEach((inquiry, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${inquiry.name}</td>
+          <td>${inquiry.email}</td>
+          <td>${inquiry.message.substring(0, 50)}...</td>
+          <td>${inquiry.date}</td>
+          <td>
+            <button class="btn-secondary" onclick="viewInquiry(${index})">View</button>
+            <button class="btn-danger" onclick="deleteInquiry(${index})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function viewInquiry(index) {
+      const inquiries = JSON.parse(localStorage.getItem('inquiries')) || [];
+      const inquiry = inquiries[index];
+      alert(`From: ${inquiry.name} (${inquiry.email})\n\n${inquiry.message}`);
+    }
+
+    function deleteInquiry(index) {
+      if (confirm('Are you sure you want to delete this inquiry?')) {
+        const inquiries = JSON.parse(localStorage.getItem('inquiries')) || [];
+        inquiries.splice(index, 1);
+        localStorage.setItem('inquiries', JSON.stringify(inquiries));
+        loadInquiries();
+        updateStats();
+      }
+    }
+
+    // Settings Management
+    function saveSettings() {
+      const settings = {
+        storeName: document.getElementById('storeName').value,
+        instaHandle: document.getElementById('instaHandle').value,
+        storeDescription: document.getElementById('storeDescription').value,
+        updatedAt: new Date().toISOString()
+      };
+      localStorage.setItem('storeSettings', JSON.stringify(settings));
+      alert('Settings saved successfully!');
+    }
+
+    // Admin account management (protected in dashboard)
+    function getAdminUsers() { try { return JSON.parse(localStorage.getItem('adminUsers')) || []; } catch(e){ return []; } }
+    function saveAdminUsers(users) { localStorage.setItem('adminUsers', JSON.stringify(users)); }
+
+    // Ensure default admin exists
+    (function(){ const u = getAdminUsers(); if (!u || u.length === 0) saveAdminUsers([{ username: 'admin', password: 'admin123' }]); })();
+
+    function renderAdminUsers() {
+      const list = document.getElementById('adminUsersList');
+      if (!list) return;
+      const users = getAdminUsers();
+      list.innerHTML = '';
+      users.forEach((u, idx) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:8px 6px; border-bottom:1px solid #f5eef2;';
+        const left = document.createElement('div'); left.textContent = u.username; left.style.fontWeight = '700'; left.style.color = '#5a3b3b';
+        const right = document.createElement('div');
+        const rm = document.createElement('button'); rm.className = 'btn-danger'; rm.textContent = 'Remove'; rm.onclick = function(){ if (!confirm('Remove account '+u.username+'?')) return; users.splice(idx,1); saveAdminUsers(users); renderAdminUsers(); };
+        right.appendChild(rm);
+        row.appendChild(left); row.appendChild(right);
+        list.appendChild(row);
+      });
+      // wire up add button
+      const addBtn = document.getElementById('addAdminBtn');
+      if (addBtn && !addBtn.dataset.bound) {
+        addBtn.addEventListener('click', function(){
+          const name = document.getElementById('adminNewUser').value.trim();
+          const pass = document.getElementById('adminNewPass').value;
+          if (!name || !pass) { alert('Please provide username and password'); return; }
+          const users = getAdminUsers();
+          if (users.find(x => x.username === name)) { alert('Username already exists'); return; }
+          users.push({ username: name, password: pass });
+          saveAdminUsers(users);
+          document.getElementById('adminNewUser').value = '';
+          document.getElementById('adminNewPass').value = '';
+          renderAdminUsers();
+        });
+        addBtn.dataset.bound = '1';
+      }
+    }
+
+    // Helper functions
+    function showAlert(elementId, message, type) {
+      const alert = document.getElementById(elementId);
+      alert.textContent = message;
+      alert.className = `alert show alert-${type}`;
+      setTimeout(() => {
+        alert.classList.remove('show');
+      }, 3000);
+    }
+
+    // Menu navigation
+    document.querySelectorAll('.menu-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const section = this.dataset.section;
+        
+        document.querySelectorAll('.content-section').forEach(s => {
+          s.classList.remove('active');
+        });
+        
+        document.querySelectorAll('.menu-link').forEach(m => {
+          m.classList.remove('active');
+        });
+        
+        document.getElementById(section).classList.add('active');
+        this.classList.add('active');
+      });
+    });
+
+    function logout() {
+      localStorage.removeItem('adminLoggedIn');
+      localStorage.removeItem('adminUsername');
+      window.location.href = './login.html';
+    }
+
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+      const productModal = document.getElementById('productModal');
+      const galleryModal = document.getElementById('galleryModal');
+      
+      if (event.target == productModal) {
+        productModal.classList.remove('show');
+      }
+      if (event.target == galleryModal) {
+        galleryModal.classList.remove('show');
+      }
+    }
+
+    // Initialize
+    loadData();
+  </script>
+</body>
+</html>

@@ -306,13 +306,30 @@ section {
 .full-viewport {
     min-height: calc(100vh - var(--header-min) - var(--footer-height));
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     justify-content: center;
+    gap: 20px;
     padding: 40px 20px;
 }
 
 /* Optional utility to make hero content sit at top for small content */
 .full-viewport .card { width: 100%; }
+
+/* Ensure price section cards lay out horizontally on wider screens */
+#price.full-viewport {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    align-items: start;
+    padding: 12px 0;
+}
+
+#price .card {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+}
 
 
 .card {
@@ -333,7 +350,6 @@ section {
 }
 .price-list li {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     padding: 10px 14px;
     border-radius: 10px;
@@ -341,10 +357,11 @@ section {
     box-shadow: 0 6px 16px rgba(0,0,0,0.04);
     color: #5a3b3b;
     font-weight: 600;
+    gap: 120px;
 }
 .price-list li strong { font-weight: 700; }
-.price-qty { font-weight: 700; }
-.price-amt { color: #c97a8a; font-weight: 700; }
+.price-qty { font-weight: 700; flex: 1; text-align: left; }
+.price-amt { color: #c97a8a; font-weight: 700; text-align: right; white-space: nowrap; }
 
 .img-box {
     border: 2px dashed #f3b6c2;

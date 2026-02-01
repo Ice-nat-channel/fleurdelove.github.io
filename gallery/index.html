@@ -38,20 +38,10 @@
     <h2>Gallery</h2>
     <p>รวมตัวอย่างช่อดอกไม้และผลงานของร้าน 🌷 เลื่อนและคลิกเพื่อขยายดู</p>
 
-    <div class="gallery-grid" aria-label="Gallery">
-      <button class="gallery-item" data-index="0" data-src="../image/gallery/f1.jpg" aria-label="เปิดภาพ 1">
-        <img src="../image/gallery/f1.jpg" alt="ช่อดอกไม้ 1">
-      </button>
-      <button class="gallery-item" data-index="1" data-src="../image/gallery/f2.jpg" aria-label="เปิดภาพ 2">
-        <img src="../image/gallery/f2.jpg" alt="ช่อดอกไม้ 2">
-      </button>
-      <button class="gallery-item" data-index="2" data-src="../image/gallery/f3.jpg" aria-label="เปิดภาพ 3">
-        <img src="../image/gallery/f3.jpg" alt="ช่อดอกไม้ 3">
-      </button>
-      <button class="gallery-item" data-index="3" data-src="../image/gallery/f4.jpg" aria-label="เปิดภาพ 4">
-        <img src="../image/gallery/f4.jpg" alt="ช่อดอกไม้ 4">
-      </button>
+    <div class="gallery-grid" aria-label="Gallery" id="galleryGrid">
+      <!-- Gallery items will be loaded here from admin dashboard -->
     </div>
+    <p id="noGalleryMsg" style="text-align: center; color: #999; margin-top: 20px;">ยังไม่มีรูปภาพในแกลเลอรี่ กรุณาไปที่ Admin Dashboard เพื่อเพิ่มรูปภาพ</p>
   </div>
 </section>
 
@@ -66,6 +56,107 @@
   </div>
   <button class="lightbox__nav lightbox__next" aria-label="ถัดไป">›</button>
 </div>
+
+<script>
+  // Load gallery images from admin dashboard
+  function loadGalleryImages() {
+    const gallery = JSON.parse(localStorage.getItem('gallery')) || [];
+    const galleryGrid = document.getElementById('galleryGrid');
+    const noGalleryMsg = document.getElementById('noGalleryMsg');
+    
+    if (gallery.length === 0) {
+      noGalleryMsg.style.display = 'block';
+      return;
+    }
+    
+    noGalleryMsg.style.display = 'none';
+    galleryGrid.innerHTML = '';
+    
+    gallery.forEach((image, index) => {
+      const btn = document.createElement('button');
+      btn.className = 'gallery-item';
+      btn.setAttribute('data-index', index);
+      btn.setAttribute('data-src', image.url);
+      btn.setAttribute('aria-label', `เปิดภาพ ${index + 1}`);
+      
+      const img = document.createElement('img');
+      img.src = image.url;
+      img.alt = image.alt || image.title;
+      
+      btn.appendChild(img);
+      galleryGrid.appendChild(btn);
+    });
+    
+    // Re-initialize lightbox with new items
+    initLightbox();
+  }
+
+  function initLightbox() {
+    const items = Array.from(document.querySelectorAll('.gallery-item'));
+    if (items.length === 0) return;
+    
+    const lightbox = document.getElementById('lightbox');
+    const lbImage = lightbox.querySelector('.lightbox__content img');
+    const btnClose = lightbox.querySelector('.lightbox__close');
+    const btnPrev = lightbox.querySelector('.lightbox__prev');
+    const btnNext = lightbox.querySelector('.lightbox__next');
+    let current = 0;
+    let isAnimating = false;
+
+    function open(index) {
+      if (isAnimating) return;
+      const item = items[index];
+      if (!item) return;
+      current = index;
+      lbImage.src = item.dataset.src;
+      lbImage.alt = item.querySelector('img').alt || '';
+      lightbox.classList.remove('is-closing');
+      lightbox.setAttribute('aria-hidden', 'false');
+      void lbImage.offsetWidth;
+      btnClose.focus();
+      isAnimating = false;
+    }
+
+    function close() {
+      if (isAnimating) return;
+      isAnimating = true;
+      lightbox.classList.add('is-closing');
+      const closeDuration = 260;
+      setTimeout(() => {
+        lightbox.setAttribute('aria-hidden', 'true');
+        lightbox.classList.remove('is-closing');
+        lbImage.src = '';
+        isAnimating = false;
+      }, closeDuration);
+    }
+
+    function showNext(dir = 1) {
+      current = (current + dir + items.length) % items.length;
+      open(current);
+    }
+
+    items.forEach((btn, i) => btn.addEventListener('click', () => open(i)));
+    btnClose.addEventListener('click', close);
+    btnPrev.addEventListener('click', () => showNext(-1));
+    btnNext.addEventListener('click', () => showNext(1));
+
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) close();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (lightbox.getAttribute('aria-hidden') === 'true') return;
+      if (e.key === 'Escape') close();
+      if (e.key === 'ArrowRight') showNext(1);
+      if (e.key === 'ArrowLeft') showNext(-1);
+    });
+  }
+
+  // Load on page load
+  window.addEventListener('DOMContentLoaded', function() {
+    loadGalleryImages();
+  });
+</script>
 
 <script>
   (function() {
@@ -132,7 +223,7 @@
 </script>
 
 <footer>
-  © 2026 Fleur de Love | By N.Parin
+  © 2026 Fleur de Love | By N.Parin | <a href="/admin/login.html" style="color: inherit; text-decoration: none; opacity: 0.7; transition: opacity 0.3s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">Admin</a>
 </footer>
 
 <script>
