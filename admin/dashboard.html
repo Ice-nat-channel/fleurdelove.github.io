@@ -494,6 +494,11 @@
               <button class="btn-primary" id="addAdminBtn" style="flex:0 0 120px;">Add</button>
             </div>
           </div>
+            <div style="margin-top:12px; display:flex; gap:8px;">
+              <button class="btn-secondary" onclick="exportSiteData()">Export Data</button>
+              <button class="btn-secondary" onclick="document.getElementById('importDataFile').click()">Import Data</button>
+              <input type="file" id="importDataFile" accept="application/json" style="display:none;" onchange="importSiteData(event)">
+            </div>
         </div>
       </section>
     </main>
@@ -1262,6 +1267,52 @@
       alert('Settings saved successfully!');
     }
 
+    // Export site data (products, gallery, orders, inquiries, settings, admin users)
+    function exportSiteData() {
+      const data = {
+        products: JSON.parse(localStorage.getItem('products') || '[]'),
+        gallery: JSON.parse(localStorage.getItem('gallery') || '[]'),
+        orders: JSON.parse(localStorage.getItem('orders') || '[]'),
+        inquiries: JSON.parse(localStorage.getItem('inquiries') || '[]'),
+        storeSettings: JSON.parse(localStorage.getItem('storeSettings') || '{}'),
+        adminUsers: JSON.parse(localStorage.getItem('adminUsers') || '[]')
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'site-data.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // Import site data from a JSON file exported by this tool
+    function importSiteData(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const obj = JSON.parse(evt.target.result);
+          if (obj.products) localStorage.setItem('products', JSON.stringify(obj.products));
+          if (obj.gallery) localStorage.setItem('gallery', JSON.stringify(obj.gallery));
+          if (obj.orders) localStorage.setItem('orders', JSON.stringify(obj.orders));
+          if (obj.inquiries) localStorage.setItem('inquiries', JSON.stringify(obj.inquiries));
+          if (obj.storeSettings) localStorage.setItem('storeSettings', JSON.stringify(obj.storeSettings));
+          if (obj.adminUsers) localStorage.setItem('adminUsers', JSON.stringify(obj.adminUsers));
+          alert('Import complete. Reloading dashboard...');
+          loadData();
+        } catch (err) {
+          alert('Failed to import data: invalid JSON file');
+        }
+      };
+      reader.readAsText(file);
+      // reset the input so same file can be selected again if needed
+      e.target.value = '';
+    }
+
     // Admin account management (protected in dashboard)
     function getAdminUsers() { try { return JSON.parse(localStorage.getItem('adminUsers')) || []; } catch(e){ return []; } }
     function saveAdminUsers(users) { localStorage.setItem('adminUsers', JSON.stringify(users)); }
@@ -1274,12 +1325,31 @@
       if (!list) return;
       const users = getAdminUsers();
       list.innerHTML = '';
+      const currentUser = localStorage.getItem('adminUsername') || '';
       users.forEach((u, idx) => {
         const row = document.createElement('div');
         row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:8px 6px; border-bottom:1px solid #f5eef2;';
         const left = document.createElement('div'); left.textContent = u.username; left.style.fontWeight = '700'; left.style.color = '#5a3b3b';
         const right = document.createElement('div');
-        const rm = document.createElement('button'); rm.className = 'btn-danger'; rm.textContent = 'Remove'; rm.onclick = function(){ if (!confirm('Remove account '+u.username+'?')) return; users.splice(idx,1); saveAdminUsers(users); renderAdminUsers(); };
+        const rm = document.createElement('button'); rm.className = 'btn-danger'; rm.textContent = 'Remove';
+        // Disable remove when this is the last remaining admin or when current user is not 'admin'
+        if (users.length <= 1 || currentUser !== 'admin') {
+          rm.disabled = true;
+          rm.style.opacity = '0.55';
+          rm.title = currentUser !== 'admin' ? 'Only signed-in admin can remove accounts' : 'Cannot remove the last admin';
+        }
+        rm.onclick = function(){
+          const signed = localStorage.getItem('adminUsername') || '';
+          if (signed !== 'admin') { alert('Only the signed-in admin can remove accounts'); return; }
+          const current = getAdminUsers();
+          if (current.length <= 1) { alert('Cannot remove the last admin'); return; }
+          if (!confirm('Remove account ' + u.username + '?')) return;
+          const removeIdx = current.findIndex(x => x.username === u.username);
+          if (removeIdx === -1) return;
+          current.splice(removeIdx, 1);
+          saveAdminUsers(current);
+          renderAdminUsers();
+        };
         right.appendChild(rm);
         row.appendChild(left); row.appendChild(right);
         list.appendChild(row);
@@ -1288,19 +1358,30 @@
       const addBtn = document.getElementById('addAdminBtn');
       if (addBtn && !addBtn.dataset.bound) {
         addBtn.addEventListener('click', function(){
-          const name = document.getElementById('adminNewUser').value.trim();
+          const currentUser = localStorage.getItem('adminUsername') || '';
+          if (currentUser !== 'admin') { alert('Only the signed-in admin can add accounts'); return; }
+          const nameInput = document.getElementById('adminNewUser');
+          const name = nameInput ? nameInput.value.trim() : '';
           const pass = document.getElementById('adminNewPass').value;
           if (!name || !pass) { alert('Please provide username and password'); return; }
           const users = getAdminUsers();
           if (users.find(x => x.username === name)) { alert('Username already exists'); return; }
           users.push({ username: name, password: pass });
           saveAdminUsers(users);
-          document.getElementById('adminNewUser').value = '';
+          if (nameInput) nameInput.value = '';
           document.getElementById('adminNewPass').value = '';
           renderAdminUsers();
         });
         addBtn.dataset.bound = '1';
       }
+      // enforce admin-only UX: disable add controls if current user isn't admin
+      const nameInput = document.getElementById('adminNewUser');
+      // (reuse previously read `currentUser`)
+      if (nameInput) {
+        nameInput.value = '';
+        nameInput.disabled = currentUser !== 'admin';
+      }
+      if (addBtn) addBtn.disabled = currentUser !== 'admin';
     }
 
     // Helper functions
