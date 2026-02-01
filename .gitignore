@@ -1,0 +1,5 @@
+# Ignore local admin Firebase config
+admin/firebase-config.js
+
+# Ignore deploy trigger
+deploy-trigger.txt
