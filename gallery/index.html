@@ -154,8 +154,37 @@
 
   // Load on page load
   window.addEventListener('DOMContentLoaded', function() {
-    loadGalleryImages();
+    initPublicSync().then(()=>{
+      loadGalleryImages();
+    }).catch(()=>{
+      loadGalleryImages();
+    });
   });
+</script>
+
+<!-- Public Firestore sync: optional, loads admin/firebase-config.js then reads site/shared -->
+<script>
+  function loadScript(src){ return new Promise(function(resolve,reject){ var s=document.createElement('script'); s.src=src; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); }); }
+
+  async function initPublicSync(){
+    try{
+      await new Promise((res)=>{
+        var cfg = document.createElement('script'); cfg.src = '/admin/firebase-config.js'; cfg.async = false; cfg.onload = res; cfg.onerror = res; document.head.appendChild(cfg);
+      });
+      if (!window.FIREBASE_CONFIG || !window.FIREBASE_CONFIG.apiKey) return;
+      if (typeof firebase === 'undefined') await loadScript('https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js');
+      if (typeof firebase.firestore === 'undefined') await loadScript('https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js');
+      try{ firebase.initializeApp(window.FIREBASE_CONFIG); }catch(e){}
+      const db = firebase.firestore();
+      const docRef = db.collection('site').doc('shared');
+      const snap = await docRef.get();
+      if (snap && snap.exists){
+        const data = snap.data() || {};
+        if (data.gallery) localStorage.setItem('gallery', JSON.stringify(data.gallery));
+        if (data.storeSettings) localStorage.setItem('storeSettings', JSON.stringify(data.storeSettings));
+      }
+    }catch(e){ console.warn('Public sync failed', e); }
+  }
 </script>
 
 <script>

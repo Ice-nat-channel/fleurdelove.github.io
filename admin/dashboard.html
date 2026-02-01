@@ -392,6 +392,8 @@
           <span class="sync-small" id="syncMessage">Not connected</span>
           <button class="btn-secondary" id="syncRetryBtn" style="margin-left:8px; display:none;" onclick="triggerManualSync()">Retry</button>
           <button class="btn-secondary" id="syncSignInBtn" style="margin-left:8px; display:none;" onclick="window.location.href='./login.html'">Sign in</button>
+          <button class="btn-primary" id="publishNowBtn" style="margin-left:8px;" onclick="publishNow()">Publish Now</button>
+          <button class="btn-secondary" id="refreshAuthBtn" style="margin-left:8px;" onclick="refreshAuthClaims()">Refresh Auth</button>
         </div>
       </div>
 
@@ -684,6 +686,42 @@
         if (sel) sel.value = act;
       }catch(e){}
     }
+      // Publish now helper wired to UI
+      window.publishNow = function(){
+        try{
+          if (typeof pushToFirebase !== 'function' && typeof pushAdminToFirebase !== 'function') {
+            alert('Firebase sync not initialized or disabled.');
+            return;
+          }
+          const p1 = (typeof pushToFirebase === 'function') ? pushToFirebase(true) : Promise.resolve();
+          const p2 = (typeof pushAdminToFirebase === 'function') ? pushAdminToFirebase(true) : Promise.resolve();
+          Promise.all([p1,p2]).then(()=>{
+            alert('Published changes to server.');
+          }).catch((err)=>{
+            console.warn('publishNow failed', err);
+            alert('Publish failed: ' + (err && err.message ? err.message : err));
+          });
+        }catch(e){ alert('Publish failed: ' + (e && e.message ? e.message : e)); }
+      };
+
+      // Refresh auth token and show claims (helpful to verify admin custom claim)
+      window.refreshAuthClaims = function(){
+        try{
+          if (!window.firebase || !firebase.auth) { alert('Firebase Auth not available'); return; }
+          const user = firebase.auth().currentUser;
+          if (!user) { alert('Not signed in'); return; }
+          user.getIdToken(true).then(function(){
+            return user.getIdTokenResult();
+          }).then(function(res){
+            alert('Token refreshed. Claims: ' + JSON.stringify(res.claims || {}));
+          }).catch(function(err){
+            console.warn('refreshAuthClaims failed', err);
+            alert('Failed to refresh token: ' + (err && err.message ? err.message : err));
+          });
+        }catch(e){ alert('Failed: ' + (e && e.message ? e.message : e)); }
+      };
+
+      // Additional code can go here
 
     let editingProductIndex = null;
     let editingGalleryIndex = null;
@@ -1037,19 +1075,52 @@
       gallery.forEach((image, index) => {
         const date = new Date(image.uploadDate).toLocaleDateString('th-TH');
         const row = document.createElement('tr');
-        const viewLink = image.isFileUpload ? 
-          `<img src="${image.url}" style="max-height: 50px; border-radius: 4px; cursor: pointer;" onclick="viewGalleryImage('${image.url}')">` :
-          `<a href="${image.url}" target="_blank" style="color:#d97087; text-decoration:none;">View</a>`;
-        row.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${image.title}</td>
-          <td>${viewLink}</td>
-          <td>${date}</td>
-          <td>
-            <button class="btn-secondary" onclick="editGallery(${index})">Edit</button>
-            <button class="btn-danger" onclick="deleteGallery(${index})">Delete</button>
-          </td>
-        `;
+
+        const numCell = document.createElement('td');
+        numCell.textContent = index + 1;
+
+        const titleCell = document.createElement('td');
+        titleCell.textContent = image.title || '';
+
+        const viewCell = document.createElement('td');
+        if (image.isFileUpload) {
+          const img = document.createElement('img');
+          img.src = image.url || '';
+          img.style.cssText = 'max-height: 50px; border-radius: 4px; cursor: pointer;';
+          img.addEventListener('click', function() { viewGalleryImage(image.url); });
+          viewCell.appendChild(img);
+        } else {
+          const a = document.createElement('a');
+          a.href = image.url || '#';
+          a.target = '_blank';
+          a.style.cssText = 'color:#d97087; text-decoration:none;';
+          a.textContent = 'View';
+          viewCell.appendChild(a);
+        }
+
+        const dateCell = document.createElement('td');
+        dateCell.textContent = date;
+
+        const actionsCell = document.createElement('td');
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn-secondary';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', function() { editGallery(index); });
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn-danger';
+        delBtn.textContent = 'Delete';
+        delBtn.addEventListener('click', function() { deleteGallery(index); });
+
+        actionsCell.appendChild(editBtn);
+        actionsCell.appendChild(delBtn);
+
+        row.appendChild(numCell);
+        row.appendChild(titleCell);
+        row.appendChild(viewCell);
+        row.appendChild(dateCell);
+        row.appendChild(actionsCell);
+
         tbody.appendChild(row);
       });
     }
@@ -1057,8 +1128,11 @@
     function viewGalleryImage(imageUrl) {
       const modal = document.createElement('div');
       modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:2000; cursor:pointer;';
-      modal.innerHTML = `<img src="${imageUrl}" style="max-width:90%; max-height:90%; border-radius:8px;">`;
-      modal.onclick = () => modal.remove();
+      const img = document.createElement('img');
+      img.src = imageUrl || '';
+      img.style.cssText = 'max-width:90%; max-height:90%; border-radius:8px;';
+      modal.appendChild(img);
+      modal.addEventListener('click', function() { modal.remove(); });
       document.body.appendChild(modal);
     }
 
@@ -1259,16 +1333,31 @@
 
       orders.forEach((order) => {
         const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${order.id}</td>
-          <td>${order.customer}</td>
-          <td>${order.date}</td>
-          <td><span style="background:#d4edda; color:#155724; padding:4px 8px; border-radius:4px;">${order.status}</span></td>
-          <td>฿${order.total}</td>
-          <td>
-            <button class="btn-secondary" onclick="viewOrder('${order.id}')">View</button>
-          </td>
-        `;
+
+        const idCell = document.createElement('td'); idCell.textContent = order.id || '';
+        const customerCell = document.createElement('td'); customerCell.textContent = order.customer || '';
+        const dateCell = document.createElement('td'); dateCell.textContent = order.date || '';
+        const statusCell = document.createElement('td');
+        const statusSpan = document.createElement('span');
+        statusSpan.style.cssText = 'background:#d4edda; color:#155724; padding:4px 8px; border-radius:4px;';
+        statusSpan.textContent = order.status || '';
+        statusCell.appendChild(statusSpan);
+        const totalCell = document.createElement('td'); totalCell.textContent = '฿' + (order.total || '0');
+
+        const actionsCell = document.createElement('td');
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'btn-secondary';
+        viewBtn.textContent = 'View';
+        viewBtn.addEventListener('click', function(){ viewOrder(order.id); });
+        actionsCell.appendChild(viewBtn);
+
+        row.appendChild(idCell);
+        row.appendChild(customerCell);
+        row.appendChild(dateCell);
+        row.appendChild(statusCell);
+        row.appendChild(totalCell);
+        row.appendChild(actionsCell);
+
         tbody.appendChild(row);
       });
     }
