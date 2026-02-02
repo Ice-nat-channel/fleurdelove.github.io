@@ -44,12 +44,19 @@ jobs:
           fi
           npm run build-config
 
+      - name: Prepare publish directory
+        run: |
+          rm -rf public
+          mkdir public
+          rsync -av --exclude='.git' --exclude='node_modules' --exclude='.github' --exclude='repo-filter.git' --exclude='repo-filter.*' --exclude='check-clean' --exclude='repo-filter' ./ public/
+          # remove local-only secrets if present
+          rm -f public/.env public/serviceAccountKey.json public/admin/firebase-config.js
+
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
+          publish_dir: public
           publish_branch: gh-pages
-          # commit message and author
           user_name: GitHub Actions
           user_email: actions@github.com
