@@ -9,6 +9,10 @@ serviceAccountKey.json
 # Local-only config files
 *.local.js
 
+# node modules should not be committed
+node_modules/
+check-clean/node_modules/
+
 # OS and editor files
 .DS_Store
 Thumbs.db# Ignore local admin Firebase config
