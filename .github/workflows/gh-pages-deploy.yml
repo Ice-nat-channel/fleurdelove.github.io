@@ -53,8 +53,8 @@ jobs:
           rm -rf public
           mkdir public
           rsync -av --exclude='.git' --exclude='node_modules' --exclude='.github' --exclude='repo-filter.git' --exclude='repo-filter.*' --exclude='check-clean' --exclude='repo-filter' ./ public/
-          # remove local-only secrets if present
-          rm -f public/.env public/serviceAccountKey.json public/admin/firebase-config.js
+          # remove local-only secrets if present (keep admin/firebase-config.js generated from repo secrets)
+          rm -f public/.env public/serviceAccountKey.json
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v3
