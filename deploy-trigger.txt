@@ -1,4 +1,0 @@
-Deploy trigger file
-Timestamp: 2026-02-01T17:58:00+07:00
-
-This file is a no-op created to force a GitHub Pages rebuild.
