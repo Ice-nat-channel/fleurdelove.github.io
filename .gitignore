@@ -1,4 +1,17 @@
-# Ignore local admin Firebase config
+# Ignore local firebase config files that contain secret keys
+/admin/firebase-config.js
+/check-clean/admin/firebase-config.js
+
+# Ignore service account keys and environment files
+serviceAccountKey.json
+.env
+
+# Local-only config files
+*.local.js
+
+# OS and editor files
+.DS_Store
+Thumbs.db# Ignore local admin Firebase config
 admin/firebase-config.js
 
 # Ignore deploy trigger
